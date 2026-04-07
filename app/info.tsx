@@ -42,6 +42,22 @@ export default function InfoScreen() {
     }
   };
 
+  const removeWidget = (index: number) => {
+    setWidgets(widgets.filter((_, i) => i !== index));
+  };
+
+  const moveWidget = (index: number, direction: 'up' | 'down') => {
+    if (direction === 'up' && index > 0) {
+      const newWidgets = [...widgets];
+      [newWidgets[index], newWidgets[index - 1]] = [newWidgets[index - 1], newWidgets[index]];
+      setWidgets(newWidgets);
+    } else if (direction === 'down' && index < widgets.length - 1) {
+      const newWidgets = [...widgets];
+      [newWidgets[index], newWidgets[index + 1]] = [newWidgets[index + 1], newWidgets[index]];
+      setWidgets(newWidgets);
+    }
+  };
+
   return (
     <View  style={{ flex: 1, backgroundColor: '#f5f5f5' }}>
       <ScrollView style={{ flex: 1, paddingTop: '25%', paddingHorizontal: 20 }}>
@@ -49,25 +65,50 @@ export default function InfoScreen() {
           Information
         </Text>
         {widgets.map((widget, index) => (
-          <View key={index} style={{
-            backgroundColor: 'white',
-            borderRadius: 15,
-            padding: 15,
-            marginBottom: 15,
-            shadowColor: '#000',
-            shadowOffset: { width: 0, height: 2 },
-            shadowOpacity: 0.1,
-            shadowRadius: 4,
-            elevation: 3,
-          }}>
-            {widget.type === 'text' ? (
-              <Text style={{ fontSize: 16 }}>{widget.content}</Text>
-            ) : (
-              <Image
-                source={{ uri: widget.content }}
-                style={{ width: '100%', height: 200, borderRadius: 10 }}
-                contentFit="cover"
-              />
+          <View key={index} style={{ marginBottom: 15 }}>
+            <View style={{
+              backgroundColor: 'white',
+              borderRadius: 15,
+              padding: 15,
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.1,
+              shadowRadius: 4,
+              elevation: 3,
+            }}>
+              {widget.type === 'text' ? (
+                <Text style={{ fontSize: 16 }}>{widget.content}</Text>
+              ) : (
+                <Image
+                  source={{ uri: widget.content }}
+                  style={{ width: '100%', height: 200, borderRadius: 10 }}
+                  contentFit="cover"
+                />
+              )}
+            </View>
+            
+            {isAdminMode && (
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 8, paddingHorizontal: 5 }}>
+                <View style={{ flexDirection: 'row', gap: 8 }}>
+                  <TouchableOpacity
+                    onPress={() => moveWidget(index, 'up')}
+                    disabled={index === 0}
+                    style={{ opacity: index === 0 ? 0.3 : 1 }}
+                  >
+                    <MaterialIcons name="arrow-upward" size={20} color="#333" />
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={() => moveWidget(index, 'down')}
+                    disabled={index === widgets.length - 1}
+                    style={{ opacity: index === widgets.length - 1 ? 0.3 : 1 }}
+                  >
+                    <MaterialIcons name="arrow-downward" size={20} color="#333" />
+                  </TouchableOpacity>
+                </View>
+                <TouchableOpacity onPress={() => removeWidget(index)}>
+                  <MaterialIcons name="delete" size={20} color="#333" />
+                </TouchableOpacity>
+              </View>
             )}
           </View>
         ))}
@@ -148,7 +189,7 @@ export default function InfoScreen() {
               <Text style={{ fontSize: 14, fontWeight: '600', marginBottom: 8 }}>Image Widget</Text>
               <TouchableOpacity
                 style={{
-                  backgroundColor: '#8cfffb',
+                  backgroundColor: '#00a8f3',
                   padding: 12,
                   borderRadius: 10,
                   alignItems: 'center',
@@ -156,8 +197,8 @@ export default function InfoScreen() {
                 }}
                 onPress={addImageWidget}
               >
-                <MaterialIcons name="image" size={24} color="#333" />
-                <Text style={{ color: '#333', fontWeight: 'bold' }}>Choose Image</Text>
+                <MaterialIcons name="image" size={24} color="#ffffff" />
+                <Text style={{ color: '#ffffff', fontWeight: 'bold' }}>Choose Image</Text>
               </TouchableOpacity>
             </View>
 
