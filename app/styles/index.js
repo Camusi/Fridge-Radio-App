@@ -3,20 +3,15 @@ import { StyleSheet } from 'react-native';
 export const index = StyleSheet.create({
   container: {
       flex: 1,
-      justifyContent: 'center',
+      justifyContent: 'flex-start',
       alignItems: 'center',
-      backgroundColor: '#f5f5f5',
-    },
-    title: {
-      fontSize: 24,
-      fontWeight: 'bold',
-      marginBottom: 20,
-    },
+      paddingTop: '20%',
+    },    
     buttonContainer: {
       width: '60%',
       height: 100,
       borderRadius: 20, // Adjust for more/less rounded corners
-      backgroundColor: '#f8f8f8c9',
+      backgroundColor: 'rgba(2, 131, 182, 0.33)',
       justifyContent: 'center',
       alignItems: 'center',
       shadowColor: '#000',
@@ -24,6 +19,9 @@ export const index = StyleSheet.create({
       shadowOpacity: 0.25,
       shadowRadius: 3.84,
       elevation: 5,
+      marginTop: '10%',
+      marginBottom: '10%',
+      zIndex: 2
     },
     button: {
       flex: 1,
