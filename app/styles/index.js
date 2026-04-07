@@ -6,11 +6,23 @@ export const index = StyleSheet.create({
       justifyContent: 'flex-start',
       alignItems: 'center',
       paddingTop: '20%',
-    },    
+    },
+    
+    logoImage: {
+      width: '100%',
+      height: '14%',
+      marginBottom: 20,
+    },
+
+    titleImage: {
+      width: '70%',
+      height: '22%',
+    },
+    
     buttonContainer: {
       width: '60%',
       height: 100,
-      borderRadius: 20, // Adjust for more/less rounded corners
+      borderRadius: 20,
       backgroundColor: 'rgba(2, 131, 182, 0.33)',
       justifyContent: 'center',
       alignItems: 'center',

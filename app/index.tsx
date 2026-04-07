@@ -48,12 +48,12 @@ export default function App() {
     <LinearGradient colors={['#00a8f3', '#8cfffb']} style={index.container}>
       <Image
         source={require('../assets/images/Cool-Fresh-Good-Trans.png')}
-        style={{ width: '100%', height: '13%', marginBottom: 20 }}
+        style={index.logoImage}
         contentFit="cover"
       />
       <Image
         source={require('../assets/images/Title-Trans.png')}
-        style={{ width: '70%', height: '22%' }}
+        style={index.titleImage}
         contentFit="cover"
       />
       <View style={index.buttonContainer}>
