@@ -4,7 +4,7 @@ import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useEffect, useRef, useState } from 'react';
 import { TouchableOpacity, View } from 'react-native';
-import { index } from './styles';
+import { index } from '../styles';
 
 
 export default function App() {
@@ -12,8 +12,16 @@ export default function App() {
   const soundRef = useRef<Audio.Sound | null>(null);
 
   useEffect(() => {
-    const loadSound = async () => {
+    const setupAudio = async () => {
       try {
+        // Configure audio session for background playback
+        await Audio.setAudioModeAsync({
+          staysActiveInBackground: true,
+          playsInSilentModeIOS: true,
+          shouldDuckAndroid: true,
+        });
+
+        // Load the stream
         const { sound } = await Audio.Sound.createAsync(
           { uri: 'http://s2.stationplaylist.com:7078/listen.mp3' },
           { shouldPlay: false }
@@ -24,7 +32,7 @@ export default function App() {
       }
     };
 
-    loadSound();
+    setupAudio();
 
     return () => {
       if (soundRef.current) {

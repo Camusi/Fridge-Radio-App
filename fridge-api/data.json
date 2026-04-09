@@ -1,0 +1,19 @@
+{
+  "items": [
+    {
+      "id": "555cdad4-75b6-45b4-b810-e9beb398a1bb",
+      "type": "text",
+      "value": "hey"
+    },
+    {
+      "id": "050cddc2-7cbd-4c7e-ba8f-b51b0b82975d",
+      "type": "image",
+      "value": "95e38fa4-af57-4512-ab99-061d4976cddb_807FC9E0-948D-4D03-A9F5-B566566F56F6.jpg"
+    },
+    {
+      "id": "01e0ba44-7d90-42ed-a176-ff5ec03a349f",
+      "type": "text",
+      "value": "potat"
+    }
+  ]
+}
