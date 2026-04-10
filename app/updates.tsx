@@ -52,42 +52,10 @@ export default function UpdatesScreen() {
     };
   };
 
-  const isRemoteUri = (uri: string) => uri.startsWith('http://') || uri.startsWith('https://') || uri.startsWith('data:');
-
-  const uploadImage = async (uri: string): Promise<Widget> => {
-    const filename = uri.split('/').pop() ?? 'image.jpg';
-    const fileTypeMatches = filename.match(/\.([a-zA-Z0-9]+)$/);
-    const fileType = fileTypeMatches ? `image/${fileTypeMatches[1]}` : 'image/jpeg';
-    const formData = new FormData();
-
-    formData.append('type', 'image');
-    formData.append('file', {
-      uri,
-      name: filename,
-      type: fileType,
-    } as any);
-
-    const response = await fetch(`${API_BASE_URL}/feed`, {
-      method: 'POST',
-      body: formData,
-    });
-
-    if (!response.ok) {
-      throw new Error(`Image upload failed: ${response.status}`);
-    }
-
-    const body = await response.json();
-    return {
-      id: body.item.id,
-      type: 'image',
-      content: getPublicImageUrl(body.item.value),
-    };
-  };
-
   const loadWidgets = async () => {
     try {
       setLoadError(null);
-      const response = await fetch(`${API_BASE_URL}/feed`);
+      const response = await fetch(`${API_BASE_URL}/load-feed`);
       if (!response.ok) {
         throw new Error(`Unable to load feed: ${response.status}`);
       }
@@ -168,40 +136,71 @@ export default function UpdatesScreen() {
     }
   };
 
-  const prepareWidgetsForSave = async () => {
-    const savedWidgets = await Promise.all(
-      widgets.map(async (widget) => {
-        if (widget.type === 'image' && !isRemoteUri(widget.content)) {
-          return uploadImage(widget.content);
-        }
-        return widget;
-      })
-    );
-
-    return savedWidgets.map((widget) => ({
-      id: widget.id,
-      type: widget.type,
-      value: widget.content,
-    }));
-  };
-
   const saveWidgets = async () => {
     if (!isAdminMode) {
       console.log('Authentication error');
-      return
+      return;
     }
 
     setSaveError(null);
     setIsSaving(true);
 
     try {
-      const items = await prepareWidgetsForSave();
-      const response = await fetch(`${API_BASE_URL}/feed`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ items }),
+      const formData = new FormData();
+
+      const itemsToSend = [];
+      const filesToUpload = [];
+
+      for (const widget of widgets) {
+        if (widget.type === 'image') {
+          const uri = widget.content;
+
+          // already uploaded image → keep as-is
+          if (uri.startsWith('http')) {
+            itemsToSend.push({
+              id: widget.id,
+              type: 'image',
+              value: uri,
+            });
+          } else {
+            // NEW local image
+            const filename = uri.split('/').pop() ?? `image.jpg`;
+
+            itemsToSend.push({
+              id: widget.id,
+              type: 'image',
+              value: filename, // placeholder name
+            });
+
+            filesToUpload.push({
+              uri,
+              name: filename,
+              type: 'image/jpeg',
+            });
+          }
+        } else {
+          itemsToSend.push({
+            id: widget.id,
+            type: 'text',
+            value: widget.content,
+          });
+        }
+      }
+
+      // JSON payload
+      formData.append(
+        'items',
+        JSON.stringify({ items: itemsToSend })
+      );
+
+      // attach files
+      filesToUpload.forEach(file => {
+        formData.append('files', file as any);
+      });
+
+      const response = await fetch(`${API_BASE_URL}/update-feed`, {
+        method: 'POST',
+        body: formData,
       });
 
       if (!response.ok) {
@@ -211,6 +210,7 @@ export default function UpdatesScreen() {
 
       const data = await response.json();
       const loadedWidgets = (data.items || []).map(normalizeWidgetFromServer);
+
       setWidgets(loadedWidgets);
       setIsDirty(false);
     } catch (error) {

@@ -1,34 +1,24 @@
+import shutil
 from fastapi import FastAPI, HTTPException, Request, UploadFile, File, Form
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
-from typing import Optional
+from typing import List
 import json
 import os
 import uuid
-import shutil
 
 app = FastAPI()
 
 DATA_FILE = "data.json"
 IMAGE_FOLDER = "api-images"
 
-# Ensure image folder exists
-os.makedirs(IMAGE_FOLDER, exist_ok=True)
-
-# Serve images
 app.mount("/api-images", StaticFiles(directory=IMAGE_FOLDER), name="images")
-
-
-# ---------- Models ----------
-class DeleteRequest(BaseModel):
-    id: str
 
 
 class FeedOverwriteRequest(BaseModel):
     items: list[dict]
 
 
-# ---------- Helpers ----------
 def load_data():
     if not os.path.exists(DATA_FILE):
         return {"items": []}
@@ -41,8 +31,25 @@ def save_data(data):
         json.dump(data, f, indent=2)
 
 
-# ---------- GET /feed ----------
-@app.get("/feed")
+def get_used_images(items):
+    return {
+        item["value"]
+        for item in items
+        if item["type"] == "image"
+    }
+
+
+def normalize_image_value(value: str):
+    if value.startswith("/api-images/"):
+        return value.split("/api-images/")[-1].split("?")[0]
+    if value.startswith("http://") or value.startswith("https://"):
+        if "/api-images/" not in value:
+            raise HTTPException(status_code=400, detail="Image URL must be from this server")
+        return value.split("/api-images/")[-1].split("?")[0]
+    return value
+
+
+@app.get("/load-feed")
 def get_feed(request: Request):
     data = load_data()
     base_url = str(request.base_url).rstrip("/")
@@ -61,127 +68,94 @@ def get_feed(request: Request):
     return {"items": result}
 
 
-def make_public_item(item, base_url):
-    if item["type"] == "image":
-        value = item["value"]
-        if value.startswith("http://") or value.startswith("https://"):
-            public_value = value
-        elif value.startswith("/api-images/"):
-            public_value = f"{base_url}{value}"
-        else:
-            public_value = f"{base_url}/api-images/{value}"
-
-        return {
-            "id": item["id"],
-            "type": "image",
-            "value": public_value,
-        }
-
-    return item
-
-
-def normalize_image_value(value: str):
-    if value.startswith("/api-images/"):
-        return value.split("/api-images/")[-1].split("?")[0]
-    if value.startswith("http://") or value.startswith("https://"):
-        if "/api-images/" not in value:
-            raise HTTPException(status_code=400, detail="Image URL must be from this server")
-        return value.split("/api-images/")[-1].split("?")[0]
-    return value
-
-
-# ---------- POST /feed ----------
-@app.post("/feed")
-async def add_item(
+@app.post("/update-feed")
+async def overwrite_feed(
     request: Request,
-    type: str = Form(...),  # use str instead of Literal for Form compatibility
-    value: Optional[str] = Form(None),
-    file: Optional[UploadFile] = File(None)
+    items: str = Form(...),
+    files: List[UploadFile] = File([])
 ):
-    data = load_data()
+    payload = json.loads(items)
 
-    if type == "text":
-        if not value:
-            raise HTTPException(status_code=400, detail="Text value required")
-        new_item = {
-            "id": str(uuid.uuid4()),
-            "type": "text",
-            "value": value
-        }
+    # ---- load existing feed ----
+    old_data = load_data()
+    old_images = get_used_images(old_data["items"])
 
-    elif type == "image":
-        if not file:
-            raise HTTPException(status_code=400, detail="Image file required")
+    uploaded_files = {}
 
-        # Save file
+    # ---- save uploaded images ----
+    for file in files:
         filename = f"{uuid.uuid4()}_{file.filename}"
         filepath = os.path.join(IMAGE_FOLDER, filename)
+
         with open(filepath, "wb") as buffer:
             shutil.copyfileobj(file.file, buffer)
 
-        new_item = {
-            "id": str(uuid.uuid4()),
-            "type": "image",
-            "value": filename
-        }
-    else:
-        raise HTTPException(status_code=400, detail="Invalid type")
+        uploaded_files[file.filename] = filename
 
-    data["items"].append(new_item)
-    save_data(data)
-    return {"message": "Item added", "item": make_public_item(new_item, str(request.base_url).rstrip("/"))}
+    new_items = []
 
-
-# ---------- PUT /feed ----------
-@app.put("/feed")
-def overwrite_feed(request: Request, payload: FeedOverwriteRequest):
-    items = []
-    for item in payload.items:
-        if item.get("type") == "text":
-            if not item.get("value"):
-                raise HTTPException(status_code=400, detail="Text value required")
-            items.append({
+    # ---- rebuild feed ----
+    for item in payload["items"]:
+        if item["type"] == "text":
+            new_items.append({
                 "id": item.get("id", str(uuid.uuid4())),
                 "type": "text",
                 "value": item["value"],
             })
-        elif item.get("type") == "image":
-            value = item.get("value")
-            if not value:
-                raise HTTPException(status_code=400, detail="Image value required")
-            normalized = normalize_image_value(value)
-            items.append({
+
+        elif item["type"] == "image":
+            value = item["value"]
+
+            # existing image
+            if value.startswith("http") or value.startswith("/api-images/"):
+                normalized = normalize_image_value(value)
+
+            # new upload
+            else:
+                if value not in uploaded_files:
+                    raise HTTPException(
+                        status_code=400,
+                        detail=f"Missing upload for {value}"
+                    )
+                normalized = uploaded_files[value]
+
+            new_items.append({
                 "id": item.get("id", str(uuid.uuid4())),
                 "type": "image",
                 "value": normalized,
             })
+
         else:
             raise HTTPException(status_code=400, detail="Invalid type")
 
-    save_data({"items": items})
+    # ---- save new feed ----
+    save_data({"items": new_items})
+
+    # ---- DELETE UNUSED IMAGES ----
+    new_images = get_used_images(new_items)
+
+    unused_images = old_images - new_images
+
+    for filename in unused_images:
+        path = os.path.join(IMAGE_FOLDER, filename)
+        if os.path.exists(path):
+            os.remove(path)
+
+    # ---- return public feed ----
     base_url = str(request.base_url).rstrip("/")
+
+    result = []
+    for item in new_items:
+        if item["type"] == "image":
+            result.append({
+                "id": item["id"],
+                "type": "image",
+                "value": f"{base_url}/api-images/{item['value']}",
+            })
+        else:
+            result.append(item)
+
     return {
-        "message": "Feed overwritten",
-        "items": [make_public_item(item, base_url) for item in items],
+        "message": "Feed updated",
+        "items": result
     }
-
-
-# ---------- POST /delete ----------
-@app.post("/delete")
-def delete_item(req: DeleteRequest):
-    data = load_data()
-    items = data["items"]
-
-    for i, item in enumerate(items):
-        if item["id"] == req.id:
-            deleted = items.pop(i)
-            save_data(data)
-
-            if deleted["type"] == "image":
-                image_path = os.path.join(IMAGE_FOLDER, deleted["value"])
-                if os.path.exists(image_path):
-                    os.remove(image_path)
-
-            return {"message": "Item deleted", "deleted": deleted}
-
-    raise HTTPException(status_code=404, detail="Item not found")
