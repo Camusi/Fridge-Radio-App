@@ -6,7 +6,7 @@ import React, { useEffect, useState } from 'react';
 import { Modal, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { global as globalStyles } from '../styles/global';
 import { info as infoStyles } from '../styles/info';
-import { API_BASE_URL, ADMIN_PASSWORD_HASH } from '../config.local';
+import { API_BASE_URL, ADMIN_PASSWORD_HASH } from '../config.local.ts';
 
 interface Widget {
   id?: string;

@@ -1,22 +1,35 @@
 import shutil
-from fastapi import FastAPI, HTTPException, Request, UploadFile, File, Form
+from fastapi import FastAPI, HTTPException, Request, UploadFile, File, Form, Header
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
-from typing import List
+from typing import List, Optional
 import json
 import os
 import uuid
+import logging
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger("api")
 
 app = FastAPI()
 
 DATA_FILE = "data.json"
+NOW_PLAYING_FILE = "now_playing.json"
 IMAGE_FOLDER = "api-images"
+API_KEY = "b4846b5ef739eb7c92e9304696195cb95690a2bbff09149afc3440a27ac679df"
 
 app.mount("/api-images", StaticFiles(directory=IMAGE_FOLDER), name="images")
 
 
 class FeedOverwriteRequest(BaseModel):
     items: list[dict]
+
+
+class NowPlaying(BaseModel):
+    artist: Optional[str] = None
+    title: Optional[str] = None
+    Artist: Optional[str] = None
+    TrackTitle: Optional[str] = None
 
 
 def load_data():
@@ -26,9 +39,21 @@ def load_data():
         return json.load(f)
 
 
-def save_data(data):
+def save_news(data):
     with open(DATA_FILE, "w", encoding="utf-8") as f:
         json.dump(data, f, indent=2)
+
+
+def save_now_playing(artist, title):
+    tmp = NOW_PLAYING_FILE + ".tmp"
+
+    with open(tmp, "w", encoding="utf-8") as f:
+        json.dump({
+            "artist": artist,
+            "title": title
+        }, f)
+
+    os.replace(tmp, NOW_PLAYING_FILE)
 
 
 def get_used_images(items):
@@ -129,7 +154,7 @@ async def overwrite_feed(
             raise HTTPException(status_code=400, detail="Invalid type")
 
     # ---- save new feed ----
-    save_data({"items": new_items})
+    save_news({"items": new_items})
 
     # ---- DELETE UNUSED IMAGES ----
     new_images = get_used_images(new_items)
@@ -159,3 +184,49 @@ async def overwrite_feed(
         "message": "Feed updated",
         "items": result
     }
+
+
+@app.post("/api/now-playing")
+async def now_playing(
+        data: NowPlaying,
+        x_api_key: str = Header(None, alias="X-API-Key")
+):
+    # Authenticate
+    if x_api_key != API_KEY:
+        raise HTTPException(status_code=401, detail="Invalid API Key")
+
+    # Handle different field naming
+    artist = data.artist or data.Artist
+    title = data.title or data.TrackTitle
+
+    if not artist or not title:
+        raise HTTPException(status_code=400, detail="Missing metadata")
+
+    current = get_now_playing()
+
+    if current and current["artist"] == artist and current["title"] == title:
+        return {"status": "unchanged"}
+
+    logger.info(f"NOW PLAYING: {artist} - {title}")
+
+    save_now_playing(artist, title)
+
+    return {"status": "received"}
+
+
+@app.get("/api/now-playing")
+def get_now_playing():
+    if not os.path.exists(NOW_PLAYING_FILE):
+        return {"artist": None, "title": None}
+
+    try:
+        with open(NOW_PLAYING_FILE, encoding="utf-8") as f:
+            content = f.read().strip()
+
+            if not content:
+                return {"artist": None, "title": None}
+
+            return json.loads(content)
+
+    except (json.JSONDecodeError, FileNotFoundError):
+        return {"artist": None, "title": None}
