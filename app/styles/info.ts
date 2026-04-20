@@ -132,7 +132,7 @@ export const info = StyleSheet.create({
   // Admin button
   adminButton: {
     position: 'absolute',
-    bottom: 20,
+    bottom: 100,
     right: 20,
     borderRadius: 20,
     width: 40,

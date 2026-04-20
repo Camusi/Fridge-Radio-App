@@ -3,10 +3,9 @@ import { StyleSheet } from 'react-native';
 export const bibleStyles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingVertical: 30,
+    paddingVertical: 60,
   },
 
   card: {
@@ -36,25 +35,53 @@ export const bibleStyles = StyleSheet.create({
   },
 
   buttonContainer: {
-    width: '70%',
-    minHeight: 96,
-    borderRadius: 30,
-    backgroundColor: '#e06f0d',
+    width: '62%',
+    minHeight: 74,
+    borderRadius: 34,
+    backgroundColor: '#06111f',
+    borderWidth: 2,
+    borderColor: '#ffda61',
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#b25b03',
+    shadowColor: '#ff6139',
     shadowOffset: { width: 0, height: 10 },
     shadowOpacity: 0.22,
-    shadowRadius: 18,
-    elevation: 6,
-    marginBottom: 32,
+    shadowRadius: 16,
+    elevation: 7,
+    marginBottom: 20,
+    padding: 10,
   },
 
   button: {
-    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    width: '100%',
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    backgroundColor: '#241f08',
+    borderWidth: 1,
+    borderColor: '#fdff7d',
+  },
+
+  barContainer: {
+    width: '88%',
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 35,
+    paddingHorizontal: 120,
+    borderRadius: 24,
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.18)',
+    marginBottom: 20,
+  },
+
+  bar: {
+    width: 5,
+    borderRadius: 4,
+    backgroundColor: '#ffffffbe',
+    marginHorizontal: 1,
+    height: 24,
   },
 
   penguinImage: {

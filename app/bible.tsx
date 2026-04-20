@@ -3,7 +3,7 @@ import { Audio } from 'expo-av';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useEffect, useRef, useState } from 'react';
-import { TouchableOpacity, View } from 'react-native';
+import { TouchableOpacity, View, Animated } from 'react-native';
 import { clearExclusive, pauseExclusive, playExclusive, subscribeActiveSoundChange } from './audioManager';
 import { bibleStyles } from './styles/bible';
 
@@ -11,6 +11,9 @@ import { bibleStyles } from './styles/bible';
 export default function App() {
   const [isPlaying, setIsPlaying] = useState(false);
   const soundRef = useRef<Audio.Sound | null>(null);
+  const barValuesRef = useRef(
+      Array.from({ length: 5 }, () => new Animated.Value(0.4))
+    );
 
   useEffect(() => {
     const setupAudio = async () => {
@@ -67,8 +70,37 @@ export default function App() {
     }
   };
 
+  const barValues = barValuesRef.current;
+  const animations = barValues.map((bar, index) => {
+    const duration = 520 + index * 80;
+    return Animated.loop(
+      Animated.sequence([
+        Animated.timing(bar, {
+          toValue: 1,
+          duration,
+          useNativeDriver: false,
+        }),
+        Animated.timing(bar, {
+          toValue: 0.35,
+          duration,
+          useNativeDriver: false,
+        }),
+      ]),
+    );
+  });
+
+  if (isPlaying) {
+    animations.forEach((animation, i) => {
+      barValues[i].setValue(0.45);
+      animation.start();
+    });
+  } else {
+    barValues.forEach(bar => bar.setValue(0.25));
+    animations.forEach(animation => animation.stop());
+  }
+
   return (
-    <LinearGradient colors={['#f38200', '#fdff8c']} style={bibleStyles.container}>
+    <LinearGradient colors={['#f38200', '#fafd46']} style={bibleStyles.container}>
       <View style={bibleStyles.card}>
         <Image
           source={require('../assets/images/Cool-Fresh-Good-Trans.png')}
@@ -82,8 +114,18 @@ export default function App() {
         />
         <View style={bibleStyles.buttonContainer}>
           <TouchableOpacity style={bibleStyles.button} onPress={togglePlayPause}>
-            <MaterialIcons name={isPlaying ? 'pause' : 'play-arrow'} size={42} color="white" />
+            <MaterialIcons name={isPlaying ? 'pause-circle-filled' : 'play-circle-filled'} size={56} color="#ffffff" />
           </TouchableOpacity>
+      </View>
+        <View style={bibleStyles.barContainer}>
+          {barValuesRef.current.map((value, indexBar) => (
+            <Animated.View
+              key={indexBar}
+              style={[
+                bibleStyles.bar, {  transform: [{  scaleY: value,  },],  },
+              ]}
+            />
+          ))}
         </View>
         <Image
           source={require('../assets/images/Bible-Penguin-Trans.png')}
