@@ -23,6 +23,18 @@ export const info = StyleSheet.create({
     color: 'black',
   },
 
+  // Info text block
+  infoText: {
+    fontSize: 16,
+    lineHeight: 24,
+    color: '#333',
+  },
+
+  // Highlighted inline label text
+  highlightText: {
+    fontWeight: '600',
+  },
+
   // Widget container
   widgetContainer: {
     marginBottom: 15,

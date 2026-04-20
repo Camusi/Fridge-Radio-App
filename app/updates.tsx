@@ -4,15 +4,19 @@ import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import React, { useEffect, useState } from 'react';
 import { Modal, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import { global as globalStyles } from '../styles/global';
-import { info as infoStyles } from '../styles/info';
-import { API_BASE_URL, ADMIN_PASSWORD_HASH } from '../config.local.ts';
+import { ADMIN_PASSWORD_HASH, API_BASE_URL } from '../config.local';
+import { global as globalStyles } from './styles/global';
+import { info as infoStyles } from './styles/info';
+import { updates as updateStyles } from './styles/updates';
 
 interface Widget {
-  id?: string;
+  id: string;
   type: 'text' | 'image';
   content: string;
 }
+
+const generateWidgetId = () => `widget-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+
 
 export default function UpdatesScreen() {
   const [widgets, setWidgets] = useState<Widget[]>([]);
@@ -25,6 +29,9 @@ export default function UpdatesScreen() {
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [editingIndex, setEditingIndex] = useState<number | null>(null);
+  const [editingText, setEditingText] = useState('');
+  const [editingImage, setEditingImage] = useState<string | null>(null);
 
   const getPublicImageUrl = (value: string) => {
     if (value.startsWith('http://') || value.startsWith('https://')) {
@@ -37,16 +44,18 @@ export default function UpdatesScreen() {
   };
 
   const normalizeWidgetFromServer = (item: any): Widget => {
+    const id = item.id ?? generateWidgetId();
+
     if (item.type === 'image') {
       return {
-        id: item.id,
+        id,
         type: 'image',
         content: getPublicImageUrl(item.value),
       };
     }
 
     return {
-      id: item.id,
+      id,
       type: 'text',
       content: item.value,
     };
@@ -55,7 +64,7 @@ export default function UpdatesScreen() {
   const loadWidgets = async () => {
     try {
       setLoadError(null);
-      const response = await fetch(`${API_BASE_URL}/load-feed`);
+      const response = await fetch('https://thebible.net.nz/load-feed');
       if (!response.ok) {
         throw new Error(`Unable to load feed: ${response.status}`);
       }
@@ -90,7 +99,7 @@ export default function UpdatesScreen() {
 
   const addTextWidget = () => {
     if (textInput.trim()) {
-      setWidgets([...widgets, { type: 'text', content: textInput }]);
+      setWidgets([...widgets, { id: generateWidgetId(), type: 'text', content: textInput }]);
       setIsDirty(true);
       setTextInput('');
       setShowAddModal(false);
@@ -111,14 +120,15 @@ export default function UpdatesScreen() {
     });
 
     if (!result.canceled) {
-      setWidgets([...widgets, { type: 'image', content: result.assets[0].uri }]);
+      setWidgets([...widgets, { id: generateWidgetId(), type: 'image', content: result.assets[0].uri }]);
       setIsDirty(true);
       setShowAddModal(false);
     }
   };
 
   const removeWidget = (index: number) => {
-    setWidgets(widgets.filter((_, i) => i !== index));
+    const updatedWidgets = widgets.filter((_, i) => i !== index);
+    setWidgets(updatedWidgets);
     setIsDirty(true);
   };
 
@@ -233,6 +243,72 @@ export default function UpdatesScreen() {
     }
   };
 
+  const startEditing = (index: number) => {
+    const widget = widgets[index];
+    setEditingIndex(index);
+    setEditingText(widget.type === 'text' ? widget.content : '');
+    setEditingImage(widget.type === 'image' ? widget.content : null);
+  };
+
+  const replaceEditingImage = async () => {
+    const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (permissionResult.granted === false) {
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 1,
+    });
+
+    if (!result.canceled && result.assets[0]?.uri) {
+      setEditingImage(result.assets[0].uri);
+    }
+  };
+
+  const saveEdit = () => {
+    if (editingIndex === null) {
+      return;
+    }
+
+    const updatedWidgets = [...widgets];
+    const widget = updatedWidgets[editingIndex];
+
+    if (widget.type === 'text') {
+      updatedWidgets[editingIndex] = {
+        ...widget,
+        content: editingText.trim() ? editingText : widget.content,
+      };
+    } else if (widget.type === 'image' && editingImage) {
+      updatedWidgets[editingIndex] = {
+        ...widget,
+        content: editingImage,
+      };
+    }
+
+    setWidgets(updatedWidgets);
+    setIsDirty(true);
+    setEditingIndex(null);
+    setEditingText('');
+    setEditingImage(null);
+  };
+
+  const renderWidgetCard = (widget: Widget) => (
+    <View style={globalStyles.widgetCard}>
+      {widget.type === 'text' ? (
+        <Text style={globalStyles.widgetText}>{widget.content}</Text>
+      ) : (
+        <Image
+          source={{ uri: widget.content }}
+          style={globalStyles.widgetImage}
+          contentFit="contain"
+        />
+      )}
+    </View>
+  );
+
   return (
     <View style={infoStyles.container}>
       <ScrollView style={infoStyles.scrollView}>
@@ -240,8 +316,8 @@ export default function UpdatesScreen() {
           Updates
         </Text>
         {loadError ? (
-          <View style={{ alignItems: 'center', marginBottom: 12 }}>
-            <Text style={{ color: '#c00', textAlign: 'center', marginBottom: 8 }}>
+          <View style={updateStyles.errorContainer}>
+            <Text style={updateStyles.errorText}>
               {loadError}
             </Text>
             <TouchableOpacity
@@ -253,40 +329,41 @@ export default function UpdatesScreen() {
           </View>
         ) : null}
         {widgets.map((widget, index) => (
-          <View key={index} style={infoStyles.widgetContainer}>
-            <View style={globalStyles.widgetCard}>
-              {widget.type === 'text' ? (
-                <Text style={globalStyles.widgetText}>{widget.content}</Text>
-              ) : (
-                <Image
-                  source={{ uri: widget.content }}
-                  style={globalStyles.widgetImage}
-                  contentFit="cover"
-                />
-              )}
-            </View>
-            
+          <View key={widget.id} style={infoStyles.widgetContainer}>
+            {renderWidgetCard(widget)}
+
             {isAdminMode && (
               <View style={infoStyles.widgetControls}>
                 <View style={infoStyles.arrowButtonsGroup}>
                   <TouchableOpacity
                     onPress={() => moveWidget(index, 'up')}
                     disabled={index === 0}
-                    style={{ opacity: index === 0 ? 0.3 : 1 }}
+                    style={[
+                      updateStyles.arrowButton,
+                      index === 0 && updateStyles.arrowButtonDisabled,
+                    ]}
                   >
                     <MaterialIcons name="arrow-upward" size={20} color="#333" />
                   </TouchableOpacity>
                   <TouchableOpacity
                     onPress={() => moveWidget(index, 'down')}
                     disabled={index === widgets.length - 1}
-                    style={{ opacity: index === widgets.length - 1 ? 0.3 : 1 }}
+                    style={[
+                      updateStyles.arrowButton,
+                      index === widgets.length - 1 && updateStyles.arrowButtonDisabled,
+                    ]}
                   >
                     <MaterialIcons name="arrow-downward" size={20} color="#333" />
                   </TouchableOpacity>
                 </View>
-                <TouchableOpacity onPress={() => removeWidget(index)}>
-                  <MaterialIcons name="delete" size={20} color="#333" />
-                </TouchableOpacity>
+                <View style={updateStyles.actionButtons}>
+                  <TouchableOpacity style={updateStyles.iconButton} onPress={() => startEditing(index)}>
+                    <MaterialIcons name="edit" size={20} color="#333" />
+                  </TouchableOpacity>
+                  <TouchableOpacity style={updateStyles.iconButton} onPress={() => removeWidget(index)}>
+                    <MaterialIcons name="delete" size={20} color="#333" />
+                  </TouchableOpacity>
+                </View>
               </View>
             )}
           </View>
@@ -303,7 +380,11 @@ export default function UpdatesScreen() {
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={[globalStyles.primaryButton, { opacity: isDirty && !isSaving ? 1 : 0.55, marginBottom: 16 }]}
+              style={[
+                globalStyles.primaryButton,
+                updateStyles.saveButton,
+                (!isDirty || isSaving) && updateStyles.disabledButton,
+              ]}
               onPress={saveWidgets}
               disabled={!isDirty || isSaving}
             >
@@ -313,7 +394,7 @@ export default function UpdatesScreen() {
             </TouchableOpacity>
 
             {saveError ? (
-              <Text style={{ color: '#c00', textAlign: 'center', marginBottom: 12 }}>
+              <Text style={updateStyles.errorText}>
                 {saveError}
               </Text>
             ) : null}
@@ -366,12 +447,55 @@ export default function UpdatesScreen() {
 
             {/* Cancel Button */}
             <TouchableOpacity
-              style={[globalStyles.secondaryButton, { width: '100%' }]}
+              style={[globalStyles.secondaryButton, globalStyles.fullWidthButton]}
               onPress={() => {
                 setShowAddModal(false);
                 setTextInput('');
               }}
             >
+              <Text style={globalStyles.secondaryButtonText}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Edit Widget Modal */}
+      <Modal
+        visible={editingIndex !== null}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setEditingIndex(null)}
+      >
+        <View style={globalStyles.modalOverlay}>
+          <View style={globalStyles.modalContainer}>
+            <Text style={globalStyles.modalTitle}>Edit Widget</Text>
+
+            {editingIndex !== null && widgets[editingIndex]?.type === 'text' ? (
+              <View style={infoStyles.addWidgetModalContent}>
+                <Text style={infoStyles.widgetTypeLabel}>Text Content</Text>
+                <TextInput
+                  style={infoStyles.widgetTextInput}
+                  placeholder="Edit text content"
+                  multiline={true}
+                  value={editingText}
+                  onChangeText={setEditingText}
+                />
+                <TouchableOpacity style={globalStyles.primaryButton} onPress={saveEdit}>
+                  <Text style={globalStyles.primaryButtonText}>Save Text</Text>
+                </TouchableOpacity>
+              </View>
+            ) : editingIndex !== null && widgets[editingIndex]?.type === 'image' ? (
+              <View style={infoStyles.addWidgetModalContent}>
+                <Text style={infoStyles.widgetTypeLabel}>Image Widget</Text>
+                <TouchableOpacity style={globalStyles.primaryButton} onPress={replaceEditingImage}>
+                  <MaterialIcons name="image" size={24} color="#ffffff" />
+                  <Text style={globalStyles.primaryButtonText}>Replace Image</Text>
+                </TouchableOpacity>
+                <Text style={updateStyles.errorText}>Current image shown in preview.</Text>
+              </View>
+            ) : null}
+
+            <TouchableOpacity style={[globalStyles.secondaryButton, globalStyles.fullWidthButton]} onPress={() => setEditingIndex(null)}>
               <Text style={globalStyles.secondaryButtonText}>Cancel</Text>
             </TouchableOpacity>
           </View>

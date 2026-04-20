@@ -1,7 +1,6 @@
 import { StyleSheet } from 'react-native';
 
 export const global = StyleSheet.create({
-  // Modal overlays
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
@@ -9,7 +8,6 @@ export const global = StyleSheet.create({
     alignItems: 'center',
   },
 
-  // Modal containers
   modalContainer: {
     backgroundColor: 'white',
     borderRadius: 20,
@@ -18,19 +16,18 @@ export const global = StyleSheet.create({
     alignItems: 'center',
   },
 
-  // Modal titles
   modalTitle: {
     fontSize: 20,
     fontWeight: 'bold',
     marginBottom: 20,
   },
 
-  // Button styles
   primaryButton: {
     backgroundColor: '#00a8f3',
     padding: 12,
     borderRadius: 10,
     alignItems: 'center',
+    justifyContent: 'center',
   },
 
   primaryButtonText: {
@@ -43,6 +40,7 @@ export const global = StyleSheet.create({
     padding: 12,
     borderRadius: 10,
     alignItems: 'center',
+    justifyContent: 'center',
   },
 
   secondaryButtonText: {
@@ -50,7 +48,10 @@ export const global = StyleSheet.create({
     fontWeight: 'bold',
   },
 
-  // Text input
+  fullWidthButton: {
+    width: '100%',
+  },
+
   textInput: {
     borderWidth: 1,
     borderColor: '#ddd',
@@ -60,7 +61,6 @@ export const global = StyleSheet.create({
     width: '100%',
   },
 
-  // Widget card
   widgetCard: {
     backgroundColor: 'white',
     borderRadius: 15,
@@ -72,15 +72,20 @@ export const global = StyleSheet.create({
     elevation: 3,
   },
 
-  // Widget image
   widgetImage: {
     width: '100%',
-    height: 200,
+    aspectRatio: 16 / 9,
     borderRadius: 10,
+    backgroundColor: '#f2f2f2',
   },
 
-  // Widget text
   widgetText: {
     fontSize: 16,
+  },
+
+  errorText: {
+    color: '#c00',
+    textAlign: 'center',
+    marginBottom: 12,
   },
 });
