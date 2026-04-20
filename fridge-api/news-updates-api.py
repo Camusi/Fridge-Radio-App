@@ -55,8 +55,8 @@ def save_now_playing(artist, title):
 
     with open(tmp, "w", encoding="utf-8") as f:
         json.dump({
-            "artist": artist,
-            "title": title
+            "Song_Artist": artist,
+            "Song_Title": title
         }, f)
 
     os.replace(tmp, NOW_PLAYING_FILE)
@@ -228,16 +228,16 @@ async def now_playing(
 @app.get("/api/now-playing")
 def get_now_playing():
     if not os.path.exists(NOW_PLAYING_FILE):
-        return {"artist": None, "title": None}
+        return {"Song_Artist": None, "Song_Title": None}
 
     try:
         with open(NOW_PLAYING_FILE, encoding="utf-8") as f:
             content = f.read().strip()
 
             if not content:
-                return {"artist": None, "title": None}
+                return {"Song_Artist": None, "Song_Title": None}
 
             return json.loads(content)
 
     except (json.JSONDecodeError, FileNotFoundError):
-        return {"artist": None, "title": None}
+        return {"Song_Artist": None, "Song_Title": None}
