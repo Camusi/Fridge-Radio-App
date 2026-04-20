@@ -16,7 +16,7 @@ app = FastAPI()
 DATA_FILE = "data.json"
 NOW_PLAYING_FILE = "now_playing.json"
 IMAGE_FOLDER = "api-images"
-API_KEY = "b4846b5ef739eb7c92e9304696195cb95690a2bbff09149afc3440a27ac679df"
+CONFIG_FILE = "config.json"
 
 app.mount("/api-images", StaticFiles(directory=IMAGE_FOLDER), name="images")
 
@@ -26,10 +26,16 @@ class FeedOverwriteRequest(BaseModel):
 
 
 class NowPlaying(BaseModel):
-    artist: Optional[str] = None
-    title: Optional[str] = None
-    Artist: Optional[str] = None
-    TrackTitle: Optional[str] = None
+    Song_Artist: Optional[str] = None
+    Song_Title: Optional[str] = None
+
+
+def load_config():
+    if not os.path.exists(CONFIG_FILE):
+        raise RuntimeError("config.json not found")
+
+    with open(CONFIG_FILE, encoding="utf-8") as f:
+        return json.load(f)
 
 
 def load_data():
@@ -72,6 +78,11 @@ def normalize_image_value(value: str):
             raise HTTPException(status_code=400, detail="Image URL must be from this server")
         return value.split("/api-images/")[-1].split("?")[0]
     return value
+
+
+API_KEY = load_config().get("API_KEY")
+if not API_KEY:
+    raise RuntimeError("API_KEY missing from config.json")
 
 
 @app.get("/load-feed")
@@ -196,15 +207,15 @@ async def now_playing(
         raise HTTPException(status_code=401, detail="Invalid API Key")
 
     # Handle different field naming
-    artist = data.artist or data.Artist
-    title = data.title or data.TrackTitle
+    artist = data.Song_Artist
+    title = data.Song_Title
 
     if not artist or not title:
         raise HTTPException(status_code=400, detail="Missing metadata")
 
     current = get_now_playing()
 
-    if current and current["artist"] == artist and current["title"] == title:
+    if current and current["Song_Artist"] == artist and current["Song_Title"] == title:
         return {"status": "unchanged"}
 
     logger.info(f"NOW PLAYING: {artist} - {title}")
