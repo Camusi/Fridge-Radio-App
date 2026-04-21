@@ -296,13 +296,13 @@ export default function UpdatesScreen() {
   };
 
   const renderWidgetCard = (widget: Widget) => (
-    <View style={globalStyles.widgetCard}>
+    <View style={updateStyles.widgetCard}>
       {widget.type === 'text' ? (
-        <Text style={globalStyles.widgetText}>{widget.content}</Text>
+        <Text style={updateStyles.widgetText}>{widget.content}</Text>
       ) : (
         <Image
           source={{ uri: widget.content }}
-          style={globalStyles.widgetImage}
+          style={updateStyles.widgetImage}
           contentFit="contain"
         />
       )}
@@ -310,99 +310,99 @@ export default function UpdatesScreen() {
   );
 
   return (
-    <View style={infoStyles.container}>
-      <ScrollView style={infoStyles.scrollView}>
-        <Text style={infoStyles.title}>
-          Updates
-        </Text>
-        {loadError ? (
-          <View style={updateStyles.errorContainer}>
-            <Text style={updateStyles.errorText}>
-              {loadError}
-            </Text>
-            <TouchableOpacity
-              style={globalStyles.secondaryButton}
-              onPress={loadWidgets}
-            >
-              <Text style={globalStyles.secondaryButtonText}>Retry Load</Text>
-            </TouchableOpacity>
-          </View>
-        ) : null}
-        {widgets.map((widget, index) => (
-          <View key={widget.id} style={infoStyles.widgetContainer}>
-            {renderWidgetCard(widget)}
-
-            {isAdminMode && (
-              <View style={infoStyles.widgetControls}>
-                <View style={infoStyles.arrowButtonsGroup}>
-                  <TouchableOpacity
-                    onPress={() => moveWidget(index, 'up')}
-                    disabled={index === 0}
-                    style={[
-                      updateStyles.arrowButton,
-                      index === 0 && updateStyles.arrowButtonDisabled,
-                    ]}
-                  >
-                    <MaterialIcons name="arrow-upward" size={20} color="#333" />
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    onPress={() => moveWidget(index, 'down')}
-                    disabled={index === widgets.length - 1}
-                    style={[
-                      updateStyles.arrowButton,
-                      index === widgets.length - 1 && updateStyles.arrowButtonDisabled,
-                    ]}
-                  >
-                    <MaterialIcons name="arrow-downward" size={20} color="#333" />
-                  </TouchableOpacity>
-                </View>
-                <View style={updateStyles.actionButtons}>
-                  <TouchableOpacity style={updateStyles.iconButton} onPress={() => startEditing(index)}>
-                    <MaterialIcons name="edit" size={20} color="#333" />
-                  </TouchableOpacity>
-                  <TouchableOpacity style={updateStyles.iconButton} onPress={() => removeWidget(index)}>
-                    <MaterialIcons name="delete" size={20} color="#333" />
-                  </TouchableOpacity>
-                </View>
-              </View>
-            )}
-          </View>
-        ))}
-
-        {isAdminMode && (
-          <>
-            <TouchableOpacity
-              style={infoStyles.addWidgetButton}
-              onPress={() => setShowAddModal(true)}
-            >
-              <MaterialIcons name="add" size={40} style={infoStyles.addWidgetIcon} />
-              <Text style={infoStyles.addWidgetText}>Add Widget</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[
-                globalStyles.primaryButton,
-                updateStyles.saveButton,
-                (!isDirty || isSaving) && updateStyles.disabledButton,
-              ]}
-              onPress={saveWidgets}
-              disabled={!isDirty || isSaving}
-            >
-              <Text style={globalStyles.primaryButtonText}>
-                {isSaving ? 'Saving...' : 'Save Changes'}
-              </Text>
-            </TouchableOpacity>
-
-            {saveError ? (
+    <View style={updateStyles.container}>
+      {/* Card Container with Internal Scrolling */}
+      <View style={updateStyles.card}>
+        <Text style={updateStyles.title}>Updates</Text>
+        
+        <ScrollView style={updateStyles.scrollView} scrollEventThrottle={16} showsVerticalScrollIndicator={false}>
+          {loadError ? (
+            <View style={updateStyles.errorContainer}>
               <Text style={updateStyles.errorText}>
-                {saveError}
+                {loadError}
               </Text>
-            ) : null}
-          </>
-        )}
+              <TouchableOpacity
+                style={globalStyles.secondaryButton}
+                onPress={loadWidgets}
+              >
+                <Text style={globalStyles.secondaryButtonText}>Retry Load</Text>
+              </TouchableOpacity>
+            </View>
+          ) : null}
+          
+          {widgets.map((widget, index) => (
+            <View key={widget.id} style={updateStyles.widgetContainer}>
+              {renderWidgetCard(widget)}
 
-        <View style={infoStyles.bottomSpacing} />
-      </ScrollView>
+              {isAdminMode && (
+                <View style={updateStyles.widgetControls}>
+                  <View style={updateStyles.arrowButtonsGroup}>
+                    <TouchableOpacity
+                      onPress={() => moveWidget(index, 'up')}
+                      disabled={index === 0}
+                      style={[
+                        updateStyles.arrowButton,
+                        index === 0 && updateStyles.arrowButtonDisabled,
+                      ]}
+                    >
+                      <MaterialIcons name="arrow-upward" size={18} color="white" />
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      onPress={() => moveWidget(index, 'down')}
+                      disabled={index === widgets.length - 1}
+                      style={[
+                        updateStyles.arrowButton,
+                        index === widgets.length - 1 && updateStyles.arrowButtonDisabled,
+                      ]}
+                    >
+                      <MaterialIcons name="arrow-downward" size={18} color="white" />
+                    </TouchableOpacity>
+                  </View>
+                  <View style={updateStyles.actionButtons}>
+                    <TouchableOpacity style={updateStyles.iconButton} onPress={() => startEditing(index)}>
+                      <MaterialIcons name="edit" size={18} color="white" />
+                    </TouchableOpacity>
+                    <TouchableOpacity style={updateStyles.iconButton} onPress={() => removeWidget(index)}>
+                      <MaterialIcons name="delete" size={18} color="white" />
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              )}
+            </View>
+          ))}
+
+          {isAdminMode && (
+            <>
+              <TouchableOpacity
+                style={updateStyles.addWidgetButton}
+                onPress={() => setShowAddModal(true)}
+              >
+                <MaterialIcons name="add" size={32} style={updateStyles.addWidgetIcon} />
+                <Text style={updateStyles.addWidgetText}>Add Widget</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[
+                  updateStyles.saveButton,
+                  (!isDirty || isSaving) && updateStyles.disabledButton,
+                ]}
+                onPress={saveWidgets}
+                disabled={!isDirty || isSaving}
+              >
+                <Text style={updateStyles.saveButtonText}>
+                  {isSaving ? 'Saving...' : 'Save Changes'}
+                </Text>
+              </TouchableOpacity>
+
+              {saveError ? (
+                <Text style={updateStyles.errorText}>
+                  {saveError}
+                </Text>
+              ) : null}
+            </>
+          )}
+        </ScrollView>
+      </View>
 
       {/* Add Widget Modal */}
       <Modal
@@ -547,8 +547,8 @@ export default function UpdatesScreen() {
       {/* Admin Button */}
       <TouchableOpacity
         style={[
-          infoStyles.adminButton,
-          isAdminMode ? infoStyles.adminButtonActive : infoStyles.adminButtonInactive,
+          updateStyles.adminButton,
+          isAdminMode ? updateStyles.adminButtonActive : updateStyles.adminButtonInactive,
         ]}
         onPress={() => {
           if (isAdminMode) {
@@ -558,7 +558,7 @@ export default function UpdatesScreen() {
           }
         }}
       >
-        <MaterialIcons name="admin-panel-settings" size={20} color="white" />
+        <MaterialIcons name="admin-panel-settings" size={20} color="#61616188" />
       </TouchableOpacity>
     </View>
   );
