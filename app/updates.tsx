@@ -1,11 +1,10 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useState } from 'react';
-import { Modal, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Text, TouchableOpacity, View } from 'react-native';
 import { API_BASE_URL } from '../config.local';
 import * as Crypto from 'expo-crypto';
 import { WidgetSection } from '../app/components/WidgetSection';
-import { global as globalStyles } from './styles/global';
-import { info as infoStyles } from './styles/info';
+import { PasswordModal } from '../app/components/PasswordModal';
 import { updates as updateStyles } from './styles/updates';
 
 
@@ -94,47 +93,10 @@ export default function UpdatesScreen() {
         <WidgetSection editing={editing} adminPassword={adminPassword}></WidgetSection>
       </View>
 
-      {/* Password Modal */}
-      <Modal
-        visible={showPasswordModal}
-        transparent={true}
-        animationType="fade"
-        onRequestClose={() => setShowPasswordModal(false)}
-      >
-        <View style={globalStyles.modalOverlay}>
-          <View style={globalStyles.modalContainer}>
-            <Text style={globalStyles.modalTitle}>Admin Access</Text>
-            
-            <TextInput
-              style={infoStyles.passwordInput}
-              placeholder="Enter admin password"
-              secureTextEntry={true}
-              value={passwordInput}
-              onChangeText={setPasswordInput}
-              onSubmitEditing={handlePasswordSubmit}
-            />
-            
-            <View style={infoStyles.buttonRow}>
-              <TouchableOpacity
-                style={[globalStyles.secondaryButton, infoStyles.buttonRowItem, infoStyles.buttonRowFirst]}
-                onPress={() => {
-                  setShowPasswordModal(false);
-                  setPasswordInput('');
-                }}
-              >
-                <Text style={globalStyles.secondaryButtonText}>Cancel</Text>
-              </TouchableOpacity>
-              
-              <TouchableOpacity
-                style={[globalStyles.primaryButton, infoStyles.buttonRowItem, infoStyles.buttonRowLast]}
-                onPress={handlePasswordSubmit}
-              >
-                <Text style={globalStyles.primaryButtonText}>Enter</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
+      <PasswordModal visible={showPasswordModal} password={passwordInput} setPassword={setPasswordInput}
+        onCancel={() => { setShowPasswordModal(false); setPasswordInput(''); }}
+        onSubmit={handlePasswordSubmit}
+      />
     </View>
   );
 }
