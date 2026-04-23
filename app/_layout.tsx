@@ -3,6 +3,7 @@ import { Tabs, useRouter, useSegments } from 'expo-router';
 import React, { useMemo } from 'react';
 import { PanResponder, View } from 'react-native';
 import { layoutStyles } from './styles/layout';
+import { Provider } from '../app/context/context';
 
 export default function RootLayout() {
   const router = useRouter();
@@ -30,53 +31,55 @@ export default function RootLayout() {
   );
 
   return (
-    <View style={{ flex: 1 }} {...panResponder.panHandlers}>
-      <Tabs
-        screenOptions={{
-          headerShown: false,
-          tabBarActiveTintColor: 'black',
-          tabBarInactiveTintColor: 'gray',
-          tabBarStyle: layoutStyles.tabBar,
-        }}
-        initialRouteName="index"
-      >
-      <Tabs.Screen
-        name="updates"
-        options={{
-          title: 'Updates',
-          tabBarIcon: ({ color, size }) => (
-            <MaterialIcons name="newspaper" size={size} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="index"
-        options={{
-          title: 'Fridge',
-          tabBarIcon: ({ color, size }) => (
-            <MaterialIcons name="home" size={size} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="bible"
-        options={{
-          title: 'Bible',
-          tabBarIcon: ({ color, size }) => (
-            <MaterialIcons name="book" size={size} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="info"
-        options={{
-          title: 'Info',
-          tabBarIcon: ({ color, size }) => (
-            <MaterialIcons name="info" size={size} color={color} />
-          ),
-        }}
-      />
-    </Tabs>
-    </View>
+    <Provider>
+      <View style={{ flex: 1 }} {...panResponder.panHandlers}>
+        <Tabs
+          screenOptions={{
+            headerShown: false,
+            tabBarActiveTintColor: 'black',
+            tabBarInactiveTintColor: 'gray',
+            tabBarStyle: layoutStyles.tabBar,
+          }}
+          initialRouteName="index"
+        >
+        <Tabs.Screen
+          name="updates"
+          options={{
+            title: 'Updates',
+            tabBarIcon: ({ color, size }) => (
+              <MaterialIcons name="newspaper" size={size} color={color} />
+            ),
+          }}
+        />
+        <Tabs.Screen
+          name="index"
+          options={{
+            title: 'Fridge',
+            tabBarIcon: ({ color, size }) => (
+              <MaterialIcons name="home" size={size} color={color} />
+            ),
+          }}
+        />
+        <Tabs.Screen
+          name="bible"
+          options={{
+            title: 'Bible',
+            tabBarIcon: ({ color, size }) => (
+              <MaterialIcons name="book" size={size} color={color} />
+            ),
+          }}
+        />
+        <Tabs.Screen
+          name="info"
+          options={{
+            title: 'Info',
+            tabBarIcon: ({ color, size }) => (
+              <MaterialIcons name="info" size={size} color={color} />
+            ),
+          }}
+        />
+      </Tabs>
+      </View>
+    </Provider>
   );
 }

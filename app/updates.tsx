@@ -1,10 +1,10 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useState } from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
-import { API_BASE_URL } from '../config.local';
-import * as Crypto from 'expo-crypto';
 import { WidgetSection } from '../app/components/WidgetSection';
 import { PasswordModal } from '../app/components/PasswordModal';
+import { checkPassword, hashPassword } from './util/passwordCheck';
+import { useGlobalContext } from '../app/context/context';
 import { updates as updateStyles } from './styles/updates';
 
 
@@ -12,42 +12,29 @@ export default function UpdatesScreen() {
   
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [passwordInput, setPasswordInput] = useState('');
-  const [adminPassword, setAdminPassword] = useState<string | null>(null);
   const [editing, setediting] = useState(false);
+  const { adminPassword, setAdminPassword } = useGlobalContext();
 
-
-  // Checks password by calling /check-password API
-  const checkPassword = async (passwordHash: string): Promise<boolean> => {
-  try {
-    const response = await fetch(`${API_BASE_URL}/check-password`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ passwordHash }),
-    });
-
-    return await response.json() === true;
-  } catch {
-    return false;
-  }
-};
 
   const handlePasswordSubmit = async () => {
-    var hash = ""
+    let hash = '';
+
     if (!adminPassword) {
-      hash = await Crypto.digestStringAsync(Crypto.CryptoDigestAlgorithm.SHA256, passwordInput)
+      hash = await hashPassword(passwordInput);
     } else {
-      hash = adminPassword
+      hash = adminPassword;
     }
+
     const isValid = await checkPassword(hash);
+
     if (isValid) {
       setAdminPassword(hash);
       setShowPasswordModal(false);
-    } 
+    }
 
     setPasswordInput('');
   };
+
 
   return (
     <View style={updateStyles.container}>
