@@ -4,7 +4,26 @@ export const info = StyleSheet.create({
   // Screen container
   container: {
     flex: 1,
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    justifyContent: 'center',
     backgroundColor: '#f5f5f5',
+  },
+
+  card: {
+    width: '100%',
+    maxWidth: 560,
+    backgroundColor: 'rgba(255,255,255,0.18)',
+    borderRadius: 32,
+    padding: 24,
+    height: '88%',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.12,
+    shadowRadius: 24,
+    elevation: 10,
+    overflow: 'hidden',
   },
 
   // Scrollview
@@ -14,13 +33,12 @@ export const info = StyleSheet.create({
     paddingHorizontal: 20,
   },
 
-  // Title
   title: {
     fontSize: 24,
     fontWeight: 'bold',
-    marginBottom: 40,
+    marginBottom: 25,
     textAlign: 'center',
-    color: 'black',
+    color: '#333',
   },
 
   // Info text block
@@ -129,26 +147,26 @@ export const info = StyleSheet.create({
     marginLeft: 10,
   },
 
-  // Admin button
   adminButton: {
-    position: 'absolute',
-    bottom: 100,
-    right: 20,
-    borderRadius: 20,
-    width: 40,
-    height: 40,
+    width: 50,
+    height: 50,
+    marginBottom: 20,
+    borderRadius: 28,
     justifyContent: 'center',
     alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 6,
   },
 
-  // Admin button active
   adminButtonActive: {
-    backgroundColor: '#00a8f3',
+    backgroundColor: '#a1e4ff2f',
   },
 
-  // Admin button inactive
   adminButtonInactive: {
-    backgroundColor: '#ccc',
+    backgroundColor: 'rgba(136, 136, 136, 0.1)',
   },
 
   // Password input
@@ -161,4 +179,33 @@ export const info = StyleSheet.create({
     width: '100%',
     fontSize: 16,
   },
+
+  editButton: {
+    width: 50,
+    height: 50,
+    marginBottom: 20,
+    borderRadius: 28,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+
+  editButtonActive: {
+    backgroundColor: '#a1e4ff2f',
+  },
+
+  editButtonInactive: {
+    backgroundColor: 'rgba(136, 136, 136, 0.1)',
+  },
+
+  infoHeader: {
+    alignItems: 'center',
+    justifyContent: 'flex-start',
+    flexDirection: 'row',
+    gap: 90
+  }
 });

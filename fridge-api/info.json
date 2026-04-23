@@ -1,29 +1,39 @@
 {
   "items": [
     {
-      "id": "01e0ba44-7d90-42ed-a176-ff5ec03a349f",
+      "id": "fridge-intro",
       "type": "text",
-      "value": "YEEEEEEEEEEEEE"
+      "value": "The Fridge — Cool, Fresh and Good\n\nA student Christian radio station aiming to build faith, speak truth, and bring joy.\n\n• 60 students on air during school days\n• Broadcasts 24/7\n• No ads"
     },
     {
-      "id": "0db6facd-2804-43b1-bb9d-fcaf99a0594f",
-      "type": "image",
-      "value": "c1957905-603b-4cdd-b90c-e54b33e22200_91663E2A-9CFB-4194-93BE-F058FE2AD97B.jpg"
+      "id": "fridge-fm",
+      "type": "text",
+      "value": "The Fridge Frequencies\n\n• Hamilton — 88.3FM\n• Christchurch — 88.3FM\n• Sumner — 88.3FM\n• West Melton — 107.5FM\n• Ashburton — 88.3FM\n• Oamaru — 87.8FM\n• Wanaka — 88.3FM\n• Queenstown — 88.3FM\n• Gore — 88.3FM\n• Invercargill — 87.8FM"
     },
     {
-      "id": "213d720d-36cf-4972-b9c2-1fd18dcd5a75",
+      "id": "fridge-bible",
       "type": "text",
-      "value": "hdidbd"
+      "value": "The Bible Network Frequencies\n\n• Christchurch — 88.0FM\n• Ashburton — 87.6FM\n• Oamaru — 87.6FM\n• Wanaka — 87.8FM\n• Queenstown — 87.6FM\n• Gore — 88.0FM\n• Invercargill — 106.7FM"
     },
     {
-      "id": "dfef74a9-d43f-47b9-ab5c-a36ca14aa3c1",
+      "id": "fridge-programming",
       "type": "text",
-      "value": "yo"
+      "value": "Programming Schedule\n\n• Murray Robertson — 7am & 7pm daily\n• The Healthy Breakfast — 7am–9am\n• News — hourly (6am–8pm)\n• The Chill Zone — 10pm–6am\n• Bible teaching — 7am & 7pm"
     },
     {
-      "id": "7204cdbb-873b-4744-bf75-5d8285f39f7f",
+      "id": "fridge-about",
       "type": "text",
-      "value": "testing"
+      "value": "About The Fridge\n\n• Scripture, clean classics, and Christian music\n• Built for faith, truth, and joy\n• Student-led station with real broadcasting experience\n• Encourages thoughtful, positive content"
+    },
+    {
+      "id": "fridge-values",
+      "type": "text",
+      "value": "What We Stand For\n\nWe follow Philippians 4:8:\n\nWhatever is true, noble, right, pure, lovely, admirable, excellent, or praiseworthy — think on these things."
+    },
+    {
+      "id": "fridge-contact",
+      "type": "text",
+      "value": "Get Involved\n\n• Send shout-outs and song requests\n• Submit recordings to go on air\n• Host a transmitter at your school or church\n• Live broadcast visits available in Canterbury\n\nContact:\n0800 THE FRIDGE\nthefridge@middleton.school.nz"
     }
   ]
 }

@@ -4,7 +4,7 @@ import { Text, TouchableOpacity, View } from 'react-native';
 import { PasswordModal } from './components/PasswordModal';
 import { WidgetSection } from './components/WidgetSection';
 import { useGlobalContext } from './context/context';
-import { updates as updateStyles } from './styles/updates';
+import { info as infoStyles } from './styles/info'
 import { checkPassword, hashPassword } from './util/passwordCheck';
 
 
@@ -35,15 +35,15 @@ export default function InfoScreen() {
 
 
   return (
-    <View style={updateStyles.container}>
-      <View style={updateStyles.card}>
+    <View style={infoStyles.container}>
+      <View style={infoStyles.card}>
 
-        <View style={updateStyles.updatesHeader}>
+        <View style={infoStyles.infoHeader}>
           {/* Admin Button */}
           <TouchableOpacity
             style={[
-              updateStyles.adminButton,
-              adminPassword ? updateStyles.adminButtonActive : updateStyles.adminButtonInactive,
+              infoStyles.adminButton,
+              adminPassword ? infoStyles.adminButtonActive : infoStyles.adminButtonInactive,
             ]}
             onPress={() => {
               if (!adminPassword) {
@@ -54,14 +54,14 @@ export default function InfoScreen() {
             <MaterialIcons name="admin-panel-settings" size={20} color="#61616188" />
           </TouchableOpacity>
 
-          <Text style={updateStyles.title}>Info</Text>
+          <Text style={infoStyles.title}>Info</Text>
 
           {/* Edit Button */}
           { adminPassword &&
             <TouchableOpacity
               style={[
-                updateStyles.editButton,
-                editing ? updateStyles.editButtonActive : updateStyles.editButtonInactive,
+                infoStyles.editButton,
+                editing ? infoStyles.editButtonActive : infoStyles.editButtonInactive,
               ]}
               onPress={() => {
                 if (!editing) {
