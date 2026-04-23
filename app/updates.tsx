@@ -32,6 +32,7 @@ export default function UpdatesScreen() {
   const [editingText, setEditingText] = useState('');
   const [editingImage, setEditingImage] = useState<string | null>(null);
   const [adminPassword, setAdminPassword] = useState<string | null>(null);
+  const [editing, setediting] = useState(false);
 
   const getPublicImageUrl = (value: string) => {
     if (value.startsWith('http://') || value.startsWith('https://')) {
@@ -324,7 +325,44 @@ export default function UpdatesScreen() {
     <View style={updateStyles.container}>
       {/* Card Container with Internal Scrolling */}
       <View style={updateStyles.card}>
-        <Text style={updateStyles.title}>Updates</Text>
+
+        <View style={updateStyles.updatesHeader}>
+          {/* Admin Button */}
+          <TouchableOpacity
+            style={[
+              updateStyles.adminButton,
+              adminPassword ? updateStyles.adminButtonActive : updateStyles.adminButtonInactive,
+            ]}
+            onPress={() => {
+              if (!adminPassword) {
+                setShowPasswordModal(true);
+              }
+            }}
+          >
+            <MaterialIcons name="admin-panel-settings" size={20} color="#61616188" />
+          </TouchableOpacity>
+
+          <Text style={updateStyles.title}>Updates</Text>
+
+          {/* Edit Button */}
+          { adminPassword &&
+            <TouchableOpacity
+              style={[
+                updateStyles.editButton,
+                editing ? updateStyles.editButtonActive : updateStyles.editButtonInactive,
+              ]}
+              onPress={() => {
+                if (!editing) {
+                  setediting(true)
+                } else {
+                  setediting(false)
+                }
+              }}
+            >
+              <MaterialIcons name="edit" size={20} color="#61616188" />
+            </TouchableOpacity>
+          }
+        </View>
         
         <ScrollView style={updateStyles.scrollView} scrollEventThrottle={16} showsVerticalScrollIndicator={false}>
           {loadError ? (
@@ -345,7 +383,7 @@ export default function UpdatesScreen() {
             <View key={widget.id} style={updateStyles.widgetContainer}>
               {renderWidgetCard(widget)}
 
-              {adminPassword && (
+              {editing && (
                 <View style={updateStyles.widgetControls}>
                   <View style={updateStyles.arrowButtonsGroup}>
                     <TouchableOpacity
@@ -382,7 +420,7 @@ export default function UpdatesScreen() {
             </View>
           ))}
 
-          {adminPassword && (
+          {editing && (
             <>
               <TouchableOpacity
                 style={updateStyles.addWidgetButton}
@@ -554,21 +592,6 @@ export default function UpdatesScreen() {
           </View>
         </View>
       </Modal>
-
-      {/* Admin Button */}
-      <TouchableOpacity
-        style={[
-          updateStyles.adminButton,
-          adminPassword ? updateStyles.adminButtonActive : updateStyles.adminButtonInactive,
-        ]}
-        onPress={() => {
-          if (!adminPassword) {
-            setShowPasswordModal(true);
-          }
-        }}
-      >
-        <MaterialIcons name="admin-panel-settings" size={20} color="#61616188" />
-      </TouchableOpacity>
     </View>
   );
 }

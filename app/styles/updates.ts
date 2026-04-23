@@ -82,7 +82,7 @@ export const updates = StyleSheet.create({
   arrowButton: {
     padding: 6,
     borderRadius: 8,
-    backgroundColor: 'rgba(255,255,255,0.3)',
+    backgroundColor: 'rgba(107, 107, 107, 0.3)',
   },
 
   arrowButtonDisabled: {
@@ -97,13 +97,13 @@ export const updates = StyleSheet.create({
   iconButton: {
     padding: 6,
     borderRadius: 8,
-    backgroundColor: 'rgba(255,255,255,0.3)',
+    backgroundColor: 'rgba(107, 107, 107, 0.3)',
   },
 
   addWidgetButton: {
     borderWidth: 2,
     borderStyle: 'dashed',
-    borderColor: 'rgba(255,255,255,0.5)',
+    borderColor: 'rgba(107, 107, 107, 0.5)',
     borderRadius: 12,
     padding: 16,
     marginTop: 12,
@@ -112,21 +112,21 @@ export const updates = StyleSheet.create({
   },
 
   addWidgetIcon: {
-    color: 'rgba(255,255,255,0.7)',
+    color: 'rgba(107, 107, 107, 0.7)',
   },
 
   addWidgetText: {
-    color: 'rgba(255,255,255,0.7)',
+    color: 'rgba(107, 107, 107, 0.7)',
     marginTop: 6,
     fontSize: 12,
     fontWeight: '500',
   },
 
   saveButton: {
-    marginTop: 12,
-    backgroundColor: '#ffda61',
+    marginVertical: 12,
+    backgroundColor: '#61d2ff',
     borderWidth: 2,
-    borderColor: '#ffda61',
+    borderColor: '#61daff',
     borderRadius: 12,
     padding: 12,
     alignItems: 'center',
@@ -161,11 +161,9 @@ export const updates = StyleSheet.create({
   },
 
   adminButton: {
-    position: 'absolute',
-    bottom: 100,
-    right: 20,
-    width: 56,
-    height: 56,
+    width: 50,
+    height: 50,
+    marginBottom: 20,
     borderRadius: 28,
     justifyContent: 'center',
     alignItems: 'center',
@@ -183,4 +181,33 @@ export const updates = StyleSheet.create({
   adminButtonInactive: {
     backgroundColor: 'rgba(136, 136, 136, 0.1)',
   },
+
+  editButton: {
+    width: 50,
+    height: 50,
+    marginBottom: 20,
+    borderRadius: 28,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+
+  editButtonActive: {
+    backgroundColor: '#a1e4ff2f',
+  },
+
+  editButtonInactive: {
+    backgroundColor: 'rgba(136, 136, 136, 0.1)',
+  },
+
+  updatesHeader: {
+    alignItems: 'center',
+    justifyContent: 'flex-start',
+    flexDirection: 'row',
+    gap: 70
+  }
 });
