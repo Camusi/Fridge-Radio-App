@@ -57,8 +57,8 @@ export default function App() {
         const response = await fetch('https://thebible.net.nz/api/now-playing');
         const json = await response.json();
         const nowPlaying = json?.now_playing ?? json;
-        const title = nowPlaying?.title || nowPlaying?.song || nowPlaying?.track || '-';
-        const artist = nowPlaying?.artist || nowPlaying?.performer || nowPlaying?.artist_name || '-';
+        const title = nowPlaying?.title || nowPlaying?.song || nowPlaying?.track || '-'; // ADJUST FOR NEW API FIELD NAMES
+        const artist = nowPlaying?.artist || nowPlaying?.performer || nowPlaying?.artist_name || '-'; // AND THIS
         setTrackTitle(title || '-');
         setTrackArtist(artist || '-');
       } catch (error) {
@@ -69,7 +69,7 @@ export default function App() {
     };
 
     fetchNowPlaying();
-    const interval = setInterval(fetchNowPlaying, 30000);
+    const interval = setInterval(fetchNowPlaying, 30000); // CHANGE THIS TO A WEBSOCKET
     return () => clearInterval(interval);
   }, []);
 

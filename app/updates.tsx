@@ -1,10 +1,10 @@
 import { MaterialIcons } from '@expo/vector-icons';
-import * as Crypto from 'expo-crypto';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import React, { useEffect, useState } from 'react';
 import { Modal, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import { ADMIN_PASSWORD_HASH, API_BASE_URL } from '../config.local';
+import { API_BASE_URL } from '../config.local';
+import * as Crypto from 'expo-crypto';
 import { global as globalStyles } from './styles/global';
 import { info as infoStyles } from './styles/info';
 import { updates as updateStyles } from './styles/updates';
@@ -20,7 +20,6 @@ const generateWidgetId = () => `widget-${Date.now()}-${Math.random().toString(36
 
 export default function UpdatesScreen() {
   const [widgets, setWidgets] = useState<Widget[]>([]);
-  const [isAdminMode, setIsAdminMode] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
   const [textInput, setTextInput] = useState('');
   const [showPasswordModal, setShowPasswordModal] = useState(false);
@@ -32,6 +31,7 @@ export default function UpdatesScreen() {
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [editingText, setEditingText] = useState('');
   const [editingImage, setEditingImage] = useState<string | null>(null);
+  const [adminPassword, setAdminPassword] = useState<string | null>(null);
 
   const getPublicImageUrl = (value: string) => {
     if (value.startsWith('http://') || value.startsWith('https://')) {
@@ -64,7 +64,7 @@ export default function UpdatesScreen() {
   const loadWidgets = async () => {
     try {
       setLoadError(null);
-      const response = await fetch('https://thebible.net.nz/load-feed');
+      const response = await fetch(`${API_BASE_URL}/load-feed`);
       if (!response.ok) {
         throw new Error(`Unable to load feed: ${response.status}`);
       }
@@ -83,19 +83,6 @@ export default function UpdatesScreen() {
   useEffect(() => {
     loadWidgets();
   }, []);
-
-  const checkPassword = async (password: string) => {
-    try {
-      const inputHash = await Crypto.digestStringAsync(
-        Crypto.CryptoDigestAlgorithm.SHA256,
-        password
-      );
-      return inputHash === ADMIN_PASSWORD_HASH;
-    } catch (error) {
-      console.error('Error checking password:', error);
-      return false;
-    }
-  };
 
   const addTextWidget = () => {
     if (textInput.trim()) {
@@ -147,8 +134,8 @@ export default function UpdatesScreen() {
   };
 
   const saveWidgets = async () => {
-    if (!isAdminMode) {
-      console.log('Authentication error');
+    if (!adminPassword) {
+      console.error('Authentication error');
       return;
     }
 
@@ -197,6 +184,9 @@ export default function UpdatesScreen() {
         }
       }
 
+      // Add password to the request
+      formData.append('password', adminPassword);
+
       // JSON payload
       formData.append(
         'items',
@@ -231,16 +221,37 @@ export default function UpdatesScreen() {
     }
   };
 
-    const handlePasswordSubmit = async () => {
-    const isValid = await checkPassword(passwordInput);
-    if (isValid) {
-      setIsAdminMode(true);
-      setShowPasswordModal(false);
-      setPasswordInput('');
+  // Checks password by calling /check-password API
+  const checkPassword = async (passwordHash: string): Promise<boolean> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/check-password`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ passwordHash }),
+    });
+
+    return await response.json() === true;
+  } catch {
+    return false;
+  }
+};
+
+  const handlePasswordSubmit = async () => {
+    var hash = ""
+    if (!adminPassword) {
+      hash = await Crypto.digestStringAsync(Crypto.CryptoDigestAlgorithm.SHA256, passwordInput)
     } else {
-      // Could add error feedback here
-      setPasswordInput('');
+      hash = adminPassword
     }
+    const isValid = await checkPassword(hash);
+    if (isValid) {
+      setAdminPassword(hash);
+      setShowPasswordModal(false);
+    } 
+
+    setPasswordInput('');
   };
 
   const startEditing = (index: number) => {
@@ -334,7 +345,7 @@ export default function UpdatesScreen() {
             <View key={widget.id} style={updateStyles.widgetContainer}>
               {renderWidgetCard(widget)}
 
-              {isAdminMode && (
+              {adminPassword && (
                 <View style={updateStyles.widgetControls}>
                   <View style={updateStyles.arrowButtonsGroup}>
                     <TouchableOpacity
@@ -371,7 +382,7 @@ export default function UpdatesScreen() {
             </View>
           ))}
 
-          {isAdminMode && (
+          {adminPassword && (
             <>
               <TouchableOpacity
                 style={updateStyles.addWidgetButton}
@@ -548,12 +559,10 @@ export default function UpdatesScreen() {
       <TouchableOpacity
         style={[
           updateStyles.adminButton,
-          isAdminMode ? updateStyles.adminButtonActive : updateStyles.adminButtonInactive,
+          adminPassword ? updateStyles.adminButtonActive : updateStyles.adminButtonInactive,
         ]}
         onPress={() => {
-          if (isAdminMode) {
-            setIsAdminMode(false);
-          } else {
+          if (!adminPassword) {
             setShowPasswordModal(true);
           }
         }}

@@ -21,6 +21,10 @@ CONFIG_FILE = "config.json"
 app.mount("/api-images", StaticFiles(directory=IMAGE_FOLDER), name="images")
 
 
+class PasswordRequest(BaseModel):
+    passwordHash: str
+
+
 class FeedOverwriteRequest(BaseModel):
     items: list[dict]
 
@@ -81,8 +85,9 @@ def normalize_image_value(value: str):
 
 
 API_KEY = load_config().get("API_KEY")
-if not API_KEY:
-    raise RuntimeError("API_KEY missing from config.json")
+ADMIN_PASSWORD = load_config().get("ADMIN_PASSWORD")
+if not API_KEY or not ADMIN_PASSWORD:
+    raise RuntimeError("API_KEY or ADMIN_PASSWORD missing from config.json")
 
 
 @app.get("/load-feed")
@@ -107,9 +112,13 @@ def get_feed(request: Request):
 @app.post("/update-feed")
 async def overwrite_feed(
     request: Request,
+    password: str = Form(...),
     items: str = Form(...),
     files: List[UploadFile] = File([])
 ):
+    if password != ADMIN_PASSWORD:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+
     payload = json.loads(items)
 
     # ---- load existing feed ----
@@ -149,10 +158,7 @@ async def overwrite_feed(
             # new upload
             else:
                 if value not in uploaded_files:
-                    raise HTTPException(
-                        status_code=400,
-                        detail=f"Missing upload for {value}"
-                    )
+                    raise HTTPException(status_code=400, detail=f"Missing upload for {value}")
                 normalized = uploaded_files[value]
 
             new_items.append({
@@ -195,6 +201,11 @@ async def overwrite_feed(
         "message": "Feed updated",
         "items": result
     }
+
+
+@app.post("/check-password")
+def check_password(data: PasswordRequest):
+    return data.passwordHash == ADMIN_PASSWORD
 
 
 @app.post("/api/now-playing")

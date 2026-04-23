@@ -177,7 +177,7 @@ export const updates = StyleSheet.create({
   },
 
   adminButtonActive: {
-    backgroundColor: '#4ad8fc',
+    backgroundColor: '#a1e4ff2f',
   },
 
   adminButtonInactive: {
