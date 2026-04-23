@@ -208,6 +208,6 @@ export const updates = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'flex-start',
     flexDirection: 'row',
-    gap: 70
+    gap: 65
   }
 });
