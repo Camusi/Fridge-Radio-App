@@ -3,37 +3,114 @@
     {
       "id": "fridge-intro",
       "type": "text",
-      "value": "The Fridge — Cool, Fresh and Good\n\nA student Christian radio station aiming to build faith, speak truth, and bring joy.\n\n• 60 students on air during school days\n• Broadcasts 24/7\n• No ads"
+      "value": [
+        {
+          "text": "The Fridge \u2014 Cool, Fresh and Good\n\n",
+          "bold": true,
+          "fontSize": 14
+        },
+        {
+          "text": "A student Christian radio station aiming to build faith, speak truth, and bring joy.\n\n\u2022 60 students on air during school days\n\u2022 Broadcasts 24/7\n\u2022 No ads",
+          "bold": false,
+          "fontSize": 14
+        }
+      ]
     },
     {
       "id": "fridge-fm",
       "type": "text",
-      "value": "The Fridge Frequencies\n\n• Hamilton — 88.3FM\n• Christchurch — 88.3FM\n• Sumner — 88.3FM\n• West Melton — 107.5FM\n• Ashburton — 88.3FM\n• Oamaru — 87.8FM\n• Wanaka — 88.3FM\n• Queenstown — 88.3FM\n• Gore — 88.3FM\n• Invercargill — 87.8FM"
+      "value": [
+        {
+          "text": "The Fridge Frequencies\n\n",
+          "bold": true,
+          "fontSize": 14
+        },
+        {
+          "text": "\u2022 Hamilton \u2014 88.3FM\n\u2022 Christchurch \u2014 88.3FM\n\u2022 Sumner \u2014 88.3FM\n\u2022 West Melton \u2014 107.5FM\n\u2022 Ashburton \u2014 88.3FM\n\u2022 Oamaru \u2014 87.8FM\n\u2022 Wanaka \u2014 88.3FM\n\u2022 Queenstown \u2014 88.3FM\n\u2022 Gore \u2014 88.3FM\n\u2022 Invercargill \u2014 87.8FM",
+          "bold": false,
+          "fontSize": 14
+        }
+      ]
     },
     {
       "id": "fridge-bible",
       "type": "text",
-      "value": "The Bible Network Frequencies\n\n• Christchurch — 88.0FM\n• Ashburton — 87.6FM\n• Oamaru — 87.6FM\n• Wanaka — 87.8FM\n• Queenstown — 87.6FM\n• Gore — 88.0FM\n• Invercargill — 106.7FM"
+      "value": [
+        {
+          "text": "The Bible Network Frequencies\n\n",
+          "bold": true,
+          "fontSize": 14
+        },
+        {
+          "text": "\u2022 Christchurch \u2014 88.0FM\n\u2022 Ashburton \u2014 87.6FM\n\u2022 Oamaru \u2014 87.6FM\n\u2022 Wanaka \u2014 87.8FM\n\u2022 Queenstown \u2014 87.6FM\n\u2022 Gore \u2014 88.0FM\n\u2022 Invercargill \u2014 106.7FM",
+          "bold": false,
+          "fontSize": 14
+        }
+      ]
     },
     {
       "id": "fridge-programming",
       "type": "text",
-      "value": "Programming Schedule\n\n• Murray Robertson — 7am & 7pm daily\n• The Healthy Breakfast — 7am–9am\n• News — hourly (6am–8pm)\n• The Chill Zone — 10pm–6am\n• Bible teaching — 7am & 7pm"
+      "value": [
+        {
+          "text": "Programming Schedule\n\n",
+          "bold": true,
+          "fontSize": 14
+        },
+        {
+          "text": "\u2022 Murray Robertson \u2014 7am & 7pm daily\n\u2022 The Healthy Breakfast \u2014 7am\u20139am\n\u2022 News \u2014 hourly (6am\u20138pm)\n\u2022 The Chill Zone \u2014 10pm\u20136am\n\u2022 Bible teaching \u2014 7am & 7pm",
+          "bold": false,
+          "fontSize": 14
+        }
+      ]
     },
     {
       "id": "fridge-about",
       "type": "text",
-      "value": "About The Fridge\n\n• Scripture, clean classics, and Christian music\n• Built for faith, truth, and joy\n• Student-led station with real broadcasting experience\n• Encourages thoughtful, positive content"
+      "value": [
+        {
+          "text": "About The Fridge\n\n",
+          "bold": true,
+          "fontSize": 14
+        },
+        {
+          "text": "\u2022 Scripture, clean classics, and Christian music\n\u2022 Built for faith, truth, and joy\n\u2022 Student-led station with real broadcasting experience\n\u2022 Encourages thoughtful, positive content",
+          "bold": false,
+          "fontSize": 14
+        }
+      ]
     },
     {
       "id": "fridge-values",
       "type": "text",
-      "value": "What We Stand For\n\nWe follow Philippians 4:8:\n\nWhatever is true, noble, right, pure, lovely, admirable, excellent, or praiseworthy — think on these things."
+      "value": [
+        {
+          "text": "What We Stand For\n\n",
+          "bold": true,
+          "fontSize": 14
+        },
+        {
+          "text": "We follow Philippians 4:8:\n\nWhatever is true, noble, right, pure, lovely, admirable, excellent, or praiseworthy \u2014 think on these things.",
+          "bold": false,
+          "fontSize": 14
+        }
+      ]
     },
     {
       "id": "fridge-contact",
       "type": "text",
-      "value": "Get Involved\n\n• Send shout-outs and song requests\n• Submit recordings to go on air\n• Host a transmitter at your school or church\n• Live broadcast visits available in Canterbury\n\nContact:\n0800 THE FRIDGE\nthefridge@middleton.school.nz"
+      "value": [
+        {
+          "text": "Get Involved\n\n",
+          "bold": true,
+          "fontSize": 14
+        },
+        {
+          "text": "\u2022 Send shout-outs and song requests\n\u2022 Submit recordings to go on air\n\u2022 Host a transmitter at your school or church\n\u2022 Live broadcast visits available in Canterbury\n\nContact:\n0800 THE FRIDGE\nthefridge@middleton.school.nz",
+          "bold": false,
+          "fontSize": 14
+        }
+      ]
     }
   ]
 }

@@ -26,6 +26,7 @@ export function PasswordModal({ visible, password, setPassword, onCancel, onSubm
           <TextInput
             style={infoStyles.passwordInput}
             placeholder="Enter admin password"
+            placeholderTextColor="#999"
             secureTextEntry
             value={password}
             onChangeText={setPassword}

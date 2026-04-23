@@ -106,7 +106,7 @@ export const updates = StyleSheet.create({
     borderColor: 'rgba(107, 107, 107, 0.5)',
     borderRadius: 12,
     padding: 16,
-    marginTop: 12,
+    marginBottom: 12,
     justifyContent: 'center',
     alignItems: 'center',
   },

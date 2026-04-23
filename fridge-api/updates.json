@@ -3,7 +3,18 @@
     {
       "id": "fridge-news-1",
       "type": "text",
-      "value": "Fridge News Update\n\nThe Fridge continues broadcasting 24/7 with student-led shows across its FM network in Canterbury and surrounding regions. Students are currently producing live segments during school days, with increased participation from new on-air trainees this term."
+      "value": [
+        {
+          "text": "Fridge News Update\n\n",
+          "bold": true,
+          "fontSize": 16
+        },
+        {
+          "text": "The Fridge continues broadcasting 24/7 with student led shows across its FM network in Canterbury and surrounding regions. Students are currently producing live segments during school days, with increased participation from new on-air trainees this term.",
+          "bold": false,
+          "fontSize": 14
+        }
+      ]
     },
     {
       "id": "widget-1776929808003-p0piaw",
@@ -13,22 +24,51 @@
     {
       "id": "fridge-news-2",
       "type": "text",
-      "value": "Bible Teaching Feature Growing\n\nThe 7am and 7pm Bible teaching slots have seen increased listener engagement, with more schools and families tuning in across Christchurch, Ashburton, and Wanaka frequencies."
+      "value": [
+        {
+          "text": "Bible Teaching Feature Growing\n\nThe 7am and 7pm Bible teaching slots have seen increased listener engagement, with more schools and families tuning in across Christchurch, Ashburton, and Wanaka frequencies.",
+          "bold": false,
+          "fontSize": 14
+        }
+      ]
+    },
+    {
+      "id": "widget-1776931234768-ce78kr",
+      "type": "image",
+      "value": "4261a817-150a-42da-b193-cab38a757e33_080211BD-7710-41F7-A8F3-3A50A1B4AA13.jpg"
     },
     {
       "id": "fridge-news-3",
       "type": "text",
-      "value": "Student Broadcasting Training\n\nNew student presenters have joined the station this term, learning live broadcasting skills, music selection, and responsible on-air communication guided by Philippians 4:8 principles."
+      "value": [
+        {
+          "text": "Student Broadcasting Training\n\nNew student presenters have joined the station this term, learning live broadcasting skills, music selection, and responsible on-air communication guided by Philippians 4:8 principles.",
+          "bold": false,
+          "fontSize": 14
+        }
+      ]
     },
     {
       "id": "fridge-news-4",
       "type": "text",
-      "value": "Community Engagement Expands\n\nThe Fridge mobile studio has begun visiting additional schools in Canterbury, giving students the opportunity to broadcast live and record content for upcoming shows."
+      "value": [
+        {
+          "text": "Community Engagement Expands\n\nThe Fridge mobile studio has begun visiting additional schools in Canterbury, giving students the opportunity to broadcast live and record content for upcoming shows.",
+          "bold": false,
+          "fontSize": 14
+        }
+      ]
     },
     {
       "id": "fridge-news-5",
       "type": "text",
-      "value": "Listener Interaction Increasing\n\nMore shout-outs and song requests are being submitted through the website, with several student recordings recently featured on-air during daytime programming."
+      "value": [
+        {
+          "text": "Listener Interaction Increasing\n\nMore shout-outs and song requests are being submitted through the website, with several student recordings recently featured on-air during daytime programming.",
+          "bold": false,
+          "fontSize": 14
+        }
+      ]
     }
   ]
 }
