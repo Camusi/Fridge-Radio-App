@@ -3,9 +3,9 @@ import { Audio } from 'expo-av';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useEffect, useRef, useState } from 'react';
-import { TouchableOpacity, View, Animated } from 'react-native';
-import { clearExclusive, pauseExclusive, playExclusive, subscribeActiveSoundChange } from './audioManager';
+import { Animated, TouchableOpacity, View } from 'react-native';
 import { bibleStyles } from './styles/bible';
+import { clearExclusive, pauseExclusive, playExclusive, subscribeActiveSoundChange } from './util/audioManager';
 
 
 export default function App() {

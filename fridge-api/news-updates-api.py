@@ -13,7 +13,8 @@ logger = logging.getLogger("api")
 
 app = FastAPI()
 
-DATA_FILE = "data.json"
+UPDATES_DATA_FILE = "updates.json"
+INFO_DATA_FILE = "info.json"
 NOW_PLAYING_FILE = "now_playing.json"
 IMAGE_FOLDER = "api-images"
 CONFIG_FILE = "config.json"
@@ -42,15 +43,15 @@ def load_config():
         return json.load(f)
 
 
-def load_data():
-    if not os.path.exists(DATA_FILE):
+def load_data(data_file):
+    if not os.path.exists(data_file):
         return {"items": []}
-    with open(DATA_FILE, encoding="utf-8") as f:
+    with open(data_file, encoding="utf-8") as f:
         return json.load(f)
 
 
-def save_news(data):
-    with open(DATA_FILE, "w", encoding="utf-8") as f:
+def save_feed(data, data_file):
+    with open(data_file, "w", encoding="utf-8") as f:
         json.dump(data, f, indent=2)
 
 
@@ -84,19 +85,12 @@ def normalize_image_value(value: str):
     return value
 
 
-API_KEY = load_config().get("API_KEY")
-ADMIN_PASSWORD = load_config().get("ADMIN_PASSWORD")
-if not API_KEY or not ADMIN_PASSWORD:
-    raise RuntimeError("API_KEY or ADMIN_PASSWORD missing from config.json")
+def build_public_feed(items, base_url: str):
+    base_url = base_url.rstrip("/")
 
-
-@app.get("/load-feed")
-def get_feed(request: Request):
-    data = load_data()
-    base_url = str(request.base_url).rstrip("/")
     result = []
 
-    for item in data["items"]:
+    for item in items:
         if item["type"] == "image":
             result.append({
                 "id": item["id"],
@@ -106,28 +100,17 @@ def get_feed(request: Request):
         else:
             result.append(item)
 
-    return {"items": result}
+    return result
 
 
-@app.post("/update-feed")
-async def overwrite_feed(
-    request: Request,
-    password: str = Form(...),
-    items: str = Form(...),
-    files: List[UploadFile] = File([])
-):
+def validate_admin(password: str):
     if password != ADMIN_PASSWORD:
         raise HTTPException(status_code=401, detail="Unauthorized")
 
-    payload = json.loads(items)
 
-    # ---- load existing feed ----
-    old_data = load_data()
-    old_images = get_used_images(old_data["items"])
+def save_uploaded_files(files: List[UploadFile]) -> dict:
+    uploaded = {}
 
-    uploaded_files = {}
-
-    # ---- save uploaded images ----
     for file in files:
         filename = f"{uuid.uuid4()}_{file.filename}"
         filepath = os.path.join(IMAGE_FOLDER, filename)
@@ -135,12 +118,15 @@ async def overwrite_feed(
         with open(filepath, "wb") as buffer:
             shutil.copyfileobj(file.file, buffer)
 
-        uploaded_files[file.filename] = filename
+        uploaded[file.filename] = filename
 
+    return uploaded
+
+
+def rebuild_items(payload_items, uploaded_files):
     new_items = []
 
-    # ---- rebuild feed ----
-    for item in payload["items"]:
+    for item in payload_items:
         if item["type"] == "text":
             new_items.append({
                 "id": item.get("id", str(uuid.uuid4())),
@@ -170,36 +156,78 @@ async def overwrite_feed(
         else:
             raise HTTPException(status_code=400, detail="Invalid type")
 
-    # ---- save new feed ----
-    save_news({"items": new_items})
+    return new_items
 
-    # ---- DELETE UNUSED IMAGES ----
+
+def cleanup_images(old_items, new_items):
+    old_images = get_used_images(old_items)
     new_images = get_used_images(new_items)
 
-    unused_images = old_images - new_images
+    unused = old_images - new_images
 
-    for filename in unused_images:
+    for filename in unused:
         path = os.path.join(IMAGE_FOLDER, filename)
         if os.path.exists(path):
             os.remove(path)
 
-    # ---- return public feed ----
-    base_url = str(request.base_url).rstrip("/")
 
-    result = []
-    for item in new_items:
-        if item["type"] == "image":
-            result.append({
-                "id": item["id"],
-                "type": "image",
-                "value": f"{base_url}/api-images/{item['value']}",
-            })
-        else:
-            result.append(item)
+API_KEY = load_config().get("API_KEY")
+ADMIN_PASSWORD = load_config().get("ADMIN_PASSWORD")
+if not API_KEY or not ADMIN_PASSWORD:
+    raise RuntimeError("API_KEY or ADMIN_PASSWORD missing from config.json")
+
+
+@app.get("/load-feed/updates")
+def get_feed(request: Request):
+    data = load_data(UPDATES_DATA_FILE)
+    return {"items": build_public_feed(data["items"], str(request.base_url))}
+
+
+@app.post("/update-feed/updates")
+async def overwrite_feed(
+    request: Request,
+    password: str = Form(...),
+    items: str = Form(...),
+    files: List[UploadFile] = File([])
+):
+    validate_admin(password)
+    payload = json.loads(items)
+    old_data = load_data(UPDATES_DATA_FILE)
+    uploaded_files = save_uploaded_files(files)
+    new_items = rebuild_items(payload["items"], uploaded_files)
+    save_feed({"items": new_items}, UPDATES_DATA_FILE)
+    cleanup_images(old_data["items"], new_items)
 
     return {
         "message": "Feed updated",
-        "items": result
+        "items": build_public_feed(new_items, str(request.base_url))
+    }
+
+
+@app.get("/load-feed/info")
+def get_feed(request: Request):
+    data = load_data(INFO_DATA_FILE)
+    return {"items": build_public_feed(data["items"], str(request.base_url))}
+
+
+@app.post("/update-feed/info")
+async def overwrite_feed(
+    request: Request,
+    password: str = Form(...),
+    items: str = Form(...),
+    files: List[UploadFile] = File([])
+):
+    validate_admin(password)
+    payload = json.loads(items)
+    old_data = load_data(INFO_DATA_FILE)
+    uploaded_files = save_uploaded_files(files)
+    new_items = rebuild_items(payload["items"], uploaded_files)
+    save_feed({"items": new_items}, INFO_DATA_FILE)
+    cleanup_images(old_data["items"], new_items)
+
+    return {
+        "message": "Feed updated",
+        "items": build_public_feed(new_items, str(request.base_url))
     }
 
 

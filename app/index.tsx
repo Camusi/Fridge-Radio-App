@@ -4,8 +4,8 @@ import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Text, TouchableOpacity, View } from 'react-native';
-import { clearExclusive, pauseExclusive, playExclusive, subscribeActiveSoundChange } from './audioManager';
 import { index } from './styles';
+import { clearExclusive, pauseExclusive, playExclusive, subscribeActiveSoundChange } from './util/audioManager';
 
 
 export default function App() {

@@ -15,7 +15,7 @@ export interface Widget {
   content: string;
 }
 
-export function useWidgetSection(adminPassword: string | null) {
+export function useWidgetSection(adminPassword: string | null, feedName: string) {
   const [widgets, setWidgets] = useState<Widget[]>([]);
   const [isDirty, setIsDirty] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -28,14 +28,14 @@ export function useWidgetSection(adminPassword: string | null) {
   const [editingText, setEditingText] = useState('');
 
   useEffect(() => {
-    loadWidgets();
+    loadWidgets(feedName);
   }, []);
 
-  const loadWidgets = async () => {
+  const loadWidgets = async (feedName: string) => {
     try {
       setLoadError(null);
 
-      const response = await fetch(`${API_BASE_URL}/load-feed`);
+      const response = await fetch(`${API_BASE_URL}/load-feed/${feedName}`);
       if (!response.ok) throw new Error("Failed");
 
       const data = await response.json();
@@ -87,7 +87,7 @@ export function useWidgetSection(adminPassword: string | null) {
     }
   };
 
-  const saveWidgets = async () => {
+  const saveWidgets = async (feedName: string) => {
     if (!adminPassword) {
       console.error('Authentication error');
       return;
@@ -152,7 +152,7 @@ export function useWidgetSection(adminPassword: string | null) {
         formData.append('files', file as any);
       });
 
-      const response = await fetch(`${API_BASE_URL}/update-feed`, {
+      const response = await fetch(`${API_BASE_URL}/update-feed/${feedName}`, {
         method: 'POST',
         body: formData,
       });
@@ -251,18 +251,16 @@ export function useWidgetSection(adminPassword: string | null) {
 }
 
 
-export function WidgetSection({
-  editing,
-  adminPassword,
-}: {
+export function WidgetSection({editing, adminPassword, feedName}: {
   editing: boolean;
   adminPassword: string | null;
+  feedName: string;
 }) {
   const {
     widgets, isDirty, isSaving, saveError, loadError, showAddModal, textInput, editingIndex, editingText,
     setShowAddModal, setTextInput, setEditingIndex, setEditingText,
     loadWidgets, moveWidget, removeWidget, startEditing, saveWidgets, addTextWidget, addImageWidget, replaceEditingImage, saveEdit,
-  } = useWidgetSection(adminPassword);
+  } = useWidgetSection(adminPassword, feedName);
 
   return (
     <View style={{ flex: 1 }}>
@@ -274,7 +272,7 @@ export function WidgetSection({
           </Text>
           <TouchableOpacity
             style={globalStyles.secondaryButton}
-            onPress={loadWidgets}
+            onPress={() => loadWidgets(feedName)}
           >
             <Text style={globalStyles.secondaryButtonText}>Retry Load</Text>
           </TouchableOpacity>
@@ -337,7 +335,7 @@ export function WidgetSection({
               updateStyles.saveButton,
               (!isDirty || isSaving) && updateStyles.disabledButton,
             ]}
-            onPress={saveWidgets}
+            onPress={() => {saveWidgets(feedName)}}
             disabled={!isDirty || isSaving}
           >
             <Text style={updateStyles.saveButtonText}>

@@ -1,11 +1,11 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useState } from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
-import { WidgetSection } from '../app/components/WidgetSection';
-import { PasswordModal } from '../app/components/PasswordModal';
-import { checkPassword, hashPassword } from './util/passwordCheck';
-import { useGlobalContext } from '../app/context/context';
+import { PasswordModal } from './components/PasswordModal';
+import { WidgetSection } from './components/WidgetSection';
+import { useGlobalContext } from './context/context';
 import { updates as updateStyles } from './styles/updates';
+import { checkPassword, hashPassword } from './util/passwordCheck';
 
 
 export default function UpdatesScreen() {
@@ -77,7 +77,7 @@ export default function UpdatesScreen() {
             </TouchableOpacity>
           }
         </View>
-        <WidgetSection editing={editing} adminPassword={adminPassword}></WidgetSection>
+        <WidgetSection editing={editing} adminPassword={adminPassword} feedName={'updates'}></WidgetSection>
       </View>
 
       <PasswordModal visible={showPasswordModal} password={passwordInput} setPassword={setPasswordInput}
