@@ -111,6 +111,24 @@
           "fontSize": 14
         }
       ]
+    },
+    {
+      "id": "widget-1776941324924-agv53h",
+      "type": "text",
+      "value": [
+        {
+          "text": "Checkout our Instagram",
+          "bold": true,
+          "fontSize": 14
+        }
+      ],
+      "link": null
+    },
+    {
+      "id": "widget-1776941304345-e84qn7",
+      "type": "image",
+      "value": "35c47568-c6fe-4af6-b5db-f31fcf8de18a_4BB24325-12ED-4389-AC44-3867229FE1B1.png",
+      "link": "https://instagram.com/thefridgeradio?igshid=MzNlNGNkZWQ4Mg"
     }
   ]
 }

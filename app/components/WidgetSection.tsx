@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { Keyboard, Modal, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Modal, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { Image } from 'expo-image';
+import { WebView } from 'react-native-webview';
 import { API_BASE_URL } from '../../config.local';
 import { updates as updateStyles } from '../styles/updates';
 import { global as globalStyles } from '../styles/global';
@@ -19,6 +20,7 @@ export interface Widget {
   id: string;
   type: 'text' | 'image';
   content: string | TextSpan[];
+  link?: string;
 }
 
 const splitSpansIntoWords = (spans: TextSpan[]): TextSpan[] => {
@@ -56,6 +58,8 @@ export function useWidgetSection(adminPassword: string | null, feedName: string)
   const [editingSpans, setEditingSpans] = useState<TextSpan[]>([]);
   const [selectedSpanIndex, setSelectedSpanIndex] = useState<number | null>(null);
   const [showFormatView, setShowFormatView] = useState(false);
+  const [showLinkView, setShowLinkView] = useState(false);
+  const [editingLink, setEditingLink] = useState('');
 
   useEffect(() => {
     loadWidgets(feedName);
@@ -133,14 +137,14 @@ export function useWidgetSection(adminPassword: string | null, feedName: string)
         if (widget.type === 'image') {
           const uri = widget.content;
           if (typeof uri === 'string' && uri.startsWith('http')) {
-            itemsToSend.push({ id: widget.id, type: 'image', value: uri });
+            itemsToSend.push({ id: widget.id, type: 'image', value: uri, link: widget.link });
           } else {
             const filename = typeof uri === 'string' ? uri.split('/').pop() : `image.jpg`;
-            itemsToSend.push({ id: widget.id, type: 'image', value: filename });
+            itemsToSend.push({ id: widget.id, type: 'image', value: filename, link: widget.link });
             filesToUpload.push({ uri, name: filename, type: 'image/jpeg' });
           }
         } else {
-          itemsToSend.push({ id: widget.id, type: 'text', value: widget.content });
+          itemsToSend.push({ id: widget.id, type: 'text', value: widget.content, link: widget.link });
         }
       }
 
@@ -173,6 +177,8 @@ export function useWidgetSection(adminPassword: string | null, feedName: string)
     const widget = widgets[index];
     setEditingIndex(index);
     setShowFormatView(false);
+    setShowLinkView(false);
+    setEditingLink(widget.link ?? '');
     if (widget.type === 'text') {
       setEditingSpans(splitSpansIntoWords(widget.content as TextSpan[]));
       setSelectedSpanIndex(0);
@@ -244,16 +250,19 @@ export function useWidgetSection(adminPassword: string | null, feedName: string)
 
     const updatedWidgets = [...widgets];
     const widget = updatedWidgets[editingIndex];
+    const link = editingLink.trim() || undefined;
 
     if (widget.type === 'text') {
       updatedWidgets[editingIndex] = {
         ...widget,
         content: mergeSpans(editingSpans.length > 0 ? editingSpans : widget.content as TextSpan[]),
+        link,
       };
-    } else if (widget.type === 'image' && editingImage) {
+    } else if (widget.type === 'image') {
       updatedWidgets[editingIndex] = {
         ...widget,
-        content: editingImage,
+        content: editingImage ?? widget.content,
+        link,
       };
     }
 
@@ -265,6 +274,8 @@ export function useWidgetSection(adminPassword: string | null, feedName: string)
     setEditingSpans([]);
     setSelectedSpanIndex(null);
     setShowFormatView(false);
+    setShowLinkView(false);
+    setEditingLink('');
   };
 
   const addTextWidget = () => {
@@ -282,8 +293,9 @@ export function useWidgetSection(adminPassword: string | null, feedName: string)
   return {
     widgets, isDirty, isSaving, saveError, loadError,
     showAddModal, textInput, editingIndex, editingText, editingImage,
-    editingSpans, selectedSpanIndex, showFormatView,
-    setShowAddModal, setTextInput, setEditingIndex, setEditingText, setSelectedSpanIndex, setShowFormatView,
+    editingSpans, selectedSpanIndex, showFormatView, showLinkView, editingLink,
+    setShowAddModal, setTextInput, setEditingIndex, setEditingText,
+    setSelectedSpanIndex, setShowFormatView, setShowLinkView, setEditingLink,
     loadWidgets, moveWidget, removeWidget, startEditing, updateEditingText, openFormatView,
     saveWidgets, addTextWidget, addImageWidget, replaceEditingImage, saveEdit,
     toggleBoldForSelectedSpan, updateFontSizeForSelectedSpan,
@@ -298,12 +310,15 @@ export function WidgetSection({editing, adminPassword, feedName}: {
 }) {
   const {
     widgets, isDirty, isSaving, saveError, loadError, showAddModal, textInput, editingIndex,
-    editingSpans, selectedSpanIndex, showFormatView,
-    setShowAddModal, setTextInput, setEditingIndex, setSelectedSpanIndex, setShowFormatView,
+    editingSpans, selectedSpanIndex, showFormatView, showLinkView, editingLink,
+    setShowAddModal, setTextInput, setEditingIndex, setSelectedSpanIndex,
+    setShowFormatView, setShowLinkView, setEditingLink,
     loadWidgets, moveWidget, removeWidget, startEditing, saveWidgets, addTextWidget, addImageWidget,
     replaceEditingImage, saveEdit, toggleBoldForSelectedSpan, updateFontSizeForSelectedSpan,
     updateEditingText, openFormatView,
   } = useWidgetSection(adminPassword, feedName);
+
+  const [webViewUrl, setWebViewUrl] = useState<string | null>(null);
 
   return (
     <View style={{ flex: 1 }}>
@@ -343,7 +358,7 @@ export function WidgetSection({editing, adminPassword, feedName}: {
 
         {widgets.map((widget, index) => (
           <View key={widget.id} style={updateStyles.widgetContainer}>
-            {renderWidgetCard(widget)}
+            {renderWidgetCard(widget, !editing && widget.link ? () => setWebViewUrl(widget.link!) : undefined)}
             {editing && (
               <View style={updateStyles.widgetControls}>
                 <View style={updateStyles.arrowButtonsGroup}>
@@ -414,7 +429,7 @@ export function WidgetSection({editing, adminPassword, feedName}: {
         </View>
       </Modal>
 
-      {/* Edit Widget Modal — also hosts the format view to avoid stacked modals */}
+      {/* Edit Widget Modal */}
       <Modal
         visible={editingIndex !== null}
         transparent={true}
@@ -422,6 +437,8 @@ export function WidgetSection({editing, adminPassword, feedName}: {
         onRequestClose={() => {
           if (showFormatView) {
             setShowFormatView(false);
+          } else if (showLinkView) {
+            setShowLinkView(false);
           } else {
             setEditingIndex(null);
           }
@@ -430,12 +447,11 @@ export function WidgetSection({editing, adminPassword, feedName}: {
         <View style={globalStyles.modalOverlay}>
           <View style={globalStyles.modalContainer}>
 
-            {/* FORMAT VIEW — shown inside the same modal */}
+            {/* FORMAT VIEW */}
             {showFormatView ? (
               <>
                 <Text style={globalStyles.modalTitle}>Format Text</Text>
                 <View style={infoStyles.addWidgetModalContent}>
-                  {/* Word tap display */}
                   <View style={{ marginBottom: 16, padding: 12, backgroundColor: '#fff', borderRadius: 8, borderWidth: 1, borderColor: '#ddd', minHeight: 80 }}>
                     <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
                       {editingSpans.map((span, i) => (
@@ -512,6 +528,39 @@ export function WidgetSection({editing, adminPassword, feedName}: {
                   <Text style={globalStyles.primaryButtonText}>Done</Text>
                 </TouchableOpacity>
               </>
+
+            ) : showLinkView ? (
+              /* LINK VIEW */
+              <>
+                <Text style={globalStyles.modalTitle}>Add Link</Text>
+                <View style={infoStyles.addWidgetModalContent}>
+                  <Text style={infoStyles.widgetTypeLabel}>URL</Text>
+                  <TextInput
+                    style={[infoStyles.widgetTextInput, { marginBottom: 12 }]}
+                    placeholder="https://..."
+                    autoCapitalize="none"
+                    autoFocus={true}
+                    keyboardType="url"
+                    value={editingLink}
+                    onChangeText={setEditingLink}
+                  />
+                  {editingLink.trim() ? (
+                    <TouchableOpacity
+                      style={[globalStyles.secondaryButton, globalStyles.fullWidthButton, { marginBottom: 8 }]}
+                      onPress={() => setEditingLink('')}
+                    >
+                      <Text style={globalStyles.secondaryButtonText}>Remove Link</Text>
+                    </TouchableOpacity>
+                  ) : null}
+                </View>
+                <TouchableOpacity
+                  style={[globalStyles.primaryButton, globalStyles.fullWidthButton]}
+                  onPress={() => setShowLinkView(false)}
+                >
+                  <Text style={globalStyles.primaryButtonText}>Done</Text>
+                </TouchableOpacity>
+              </>
+
             ) : (
               /* EDIT VIEW */
               <>
@@ -527,22 +576,44 @@ export function WidgetSection({editing, adminPassword, feedName}: {
                       value={editingSpans.map(s => s.text).join('')}
                       onChangeText={updateEditingText}
                     />
-                    <TouchableOpacity style={globalStyles.primaryButton} onPress={openFormatView}>
+                    <TouchableOpacity
+                      style={[globalStyles.primaryButton, { marginBottom: 8 }]}
+                      onPress={openFormatView}
+                    >
                       <Text style={globalStyles.primaryButtonText}>Format</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={[editingLink.trim() ? globalStyles.primaryButton : globalStyles.secondaryButton, { marginBottom: 8 }]}
+                      onPress={() => setShowLinkView(true)}
+                    >
+                      <Text style={editingLink.trim() ? globalStyles.primaryButtonText : globalStyles.secondaryButtonText}>
+                        {editingLink.trim() ? 'Edit Link' : 'Add Link'}
+                      </Text>
                     </TouchableOpacity>
                   </View>
                 ) : editingIndex !== null && widgets[editingIndex]?.type === 'image' ? (
                   <View style={infoStyles.addWidgetModalContent}>
                     <Text style={infoStyles.widgetTypeLabel}>Image Widget</Text>
-                    <TouchableOpacity style={globalStyles.primaryButton} onPress={replaceEditingImage}>
+                    <TouchableOpacity
+                      style={[globalStyles.primaryButton, { marginBottom: 8 }]}
+                      onPress={replaceEditingImage}
+                    >
                       <MaterialIcons name="image" size={24} color="#ffffff" />
                       <Text style={globalStyles.primaryButtonText}>Replace Image</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={[editingLink.trim() ? globalStyles.primaryButton : globalStyles.secondaryButton, { marginBottom: 8 }]}
+                      onPress={() => setShowLinkView(true)}
+                    >
+                      <Text style={editingLink.trim() ? globalStyles.primaryButtonText : globalStyles.secondaryButtonText}>
+                        {editingLink.trim() ? 'Edit Link' : 'Add Link'}
+                      </Text>
                     </TouchableOpacity>
                   </View>
                 ) : null}
 
                 <TouchableOpacity
-                  style={[globalStyles.secondaryButton, globalStyles.fullWidthButton]}
+                  style={[globalStyles.secondaryButton, globalStyles.fullWidthButton, { marginTop: 8 }]}
                   onPress={() => setEditingIndex(null)}
                 >
                   <Text style={globalStyles.secondaryButtonText}>Cancel</Text>
@@ -558,6 +629,25 @@ export function WidgetSection({editing, adminPassword, feedName}: {
             )}
 
           </View>
+        </View>
+      </Modal>
+
+      {/* WebView Modal */}
+      <Modal
+        visible={webViewUrl !== null}
+        animationType="slide"
+        onRequestClose={() => setWebViewUrl(null)}
+      >
+        <View style={{ flex: 1 }}>
+          <TouchableOpacity
+            style={{ padding: 16, backgroundColor: '#ffffff', alignItems: 'flex-end', marginTop: 30 }}
+            onPress={() => setWebViewUrl(null)}
+          >
+            <MaterialIcons name="close" size={24} color="#333" />
+          </TouchableOpacity>
+          {webViewUrl && (
+            <WebView source={{ uri: webViewUrl }} style={{ flex: 1 }} />
+          )}
         </View>
       </Modal>
     </View>
@@ -578,22 +668,28 @@ const normalizeWidgetFromServer = (item: any): Widget => {
   const id = item.id ?? generateWidgetId();
 
   if (item.type === 'image') {
-    return { id, type: 'image', content: getPublicImageUrl(item.value) };
+    return { id, type: 'image', content: getPublicImageUrl(item.value), link: item.link };
   }
 
   if (Array.isArray(item.value)) {
-    return { id, type: 'text', content: item.value };
+    return { id, type: 'text', content: item.value, link: item.link };
   }
 
   return {
     id,
     type: 'text',
     content: [{ text: item.value, bold: false, fontSize: 14 }],
+    link: item.link,
   };
 };
 
-const renderWidgetCard = (widget: Widget) => (
-  <View style={updateStyles.widgetCard}>
+const renderWidgetCard = (widget: Widget, onPress?: () => void) => (
+  <TouchableOpacity
+    onPress={onPress}
+    disabled={!onPress}
+    activeOpacity={onPress ? 0.7 : 1}
+    style={updateStyles.widgetCard}
+  >
     {widget.type === 'text' && Array.isArray(widget.content) ? (
       <Text style={updateStyles.widgetText}>
         {widget.content.map((span, i) => (
@@ -605,5 +701,5 @@ const renderWidgetCard = (widget: Widget) => (
     ) : widget.type === 'image' && typeof widget.content === 'string' ? (
       <Image source={{ uri: widget.content }} style={updateStyles.widgetImage} contentFit="contain" />
     ) : null}
-  </View>
+  </TouchableOpacity>
 );

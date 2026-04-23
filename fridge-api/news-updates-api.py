@@ -17,6 +17,8 @@ UPDATES_DATA_FILE = "updates.json"
 INFO_DATA_FILE = "info.json"
 NOW_PLAYING_FILE = "now_playing.json"
 IMAGE_FOLDER = "api-images"
+UPDATES_IMAGE_FOLDER = IMAGE_FOLDER + "/updates"
+INFO_IMAGE_FOLDER = IMAGE_FOLDER + "/info"
 CONFIG_FILE = "config.json"
 
 app.mount("/api-images", StaticFiles(directory=IMAGE_FOLDER), name="images")
@@ -96,9 +98,15 @@ def build_public_feed(items, base_url: str):
                 "id": item["id"],
                 "type": "image",
                 "value": f"{base_url}/api-images/{item['value']}",
+                "link": item.get("link"),   # <-- FIX
             })
         else:
-            result.append(item)
+            result.append({
+                "id": item["id"],
+                "type": "text",
+                "value": item["value"],
+                "link": item.get("link"),   # <-- FIX
+            })
 
     return result
 
@@ -108,17 +116,17 @@ def validate_admin(password: str):
         raise HTTPException(status_code=401, detail="Unauthorized")
 
 
-def save_uploaded_files(files: List[UploadFile]) -> dict:
+def save_uploaded_files(files: List[UploadFile], image_folder) -> dict:
     uploaded = {}
 
     for file in files:
         filename = f"{uuid.uuid4()}_{file.filename}"
-        filepath = os.path.join(IMAGE_FOLDER, filename)
+        filepath = os.path.join(image_folder, filename)
 
         with open(filepath, "wb") as buffer:
             shutil.copyfileobj(file.file, buffer)
 
-        uploaded[file.filename] = filename
+        uploaded[file.filename] = f"{os.path.basename(image_folder)}/{filename}"
 
     return uploaded
 
@@ -127,21 +135,21 @@ def rebuild_items(payload_items, uploaded_files):
     new_items = []
 
     for item in payload_items:
+        link = item.get("link")  # <-- keep the link
+
         if item["type"] == "text":
             new_items.append({
                 "id": item.get("id", str(uuid.uuid4())),
                 "type": "text",
                 "value": item["value"],
+                "link": link,   # <-- save it
             })
 
         elif item["type"] == "image":
             value = item["value"]
 
-            # existing image
             if value.startswith("http") or value.startswith("/api-images/"):
                 normalized = normalize_image_value(value)
-
-            # new upload
             else:
                 if value not in uploaded_files:
                     raise HTTPException(status_code=400, detail=f"Missing upload for {value}")
@@ -151,6 +159,7 @@ def rebuild_items(payload_items, uploaded_files):
                 "id": item.get("id", str(uuid.uuid4())),
                 "type": "image",
                 "value": normalized,
+                "link": link,   # <-- save it
             })
 
         else:
@@ -159,16 +168,21 @@ def rebuild_items(payload_items, uploaded_files):
     return new_items
 
 
-def cleanup_images(old_items, new_items):
+def cleanup_images(old_items, new_items, image_folder):
     old_images = get_used_images(old_items)
     new_images = get_used_images(new_items)
 
     unused = old_images - new_images
 
     for filename in unused:
-        path = os.path.join(IMAGE_FOLDER, filename)
-        if os.path.exists(path):
-            os.remove(path)
+        # Strip feed prefix if present (e.g. "updates/123.jpg" → "123.jpg")
+        clean_name = filename.split("/", 1)[-1]
+        full_path = os.path.join(image_folder, clean_name)
+
+        try:
+            os.remove(full_path)
+        except Exception as e:
+            logger.error(f"Failed to delete {full_path}: {e}")
 
 
 API_KEY = load_config().get("API_KEY")
@@ -193,10 +207,10 @@ async def overwrite_feed(
     validate_admin(password)
     payload = json.loads(items)
     old_data = load_data(UPDATES_DATA_FILE)
-    uploaded_files = save_uploaded_files(files)
+    uploaded_files = save_uploaded_files(files, UPDATES_IMAGE_FOLDER)
     new_items = rebuild_items(payload["items"], uploaded_files)
     save_feed({"items": new_items}, UPDATES_DATA_FILE)
-    cleanup_images(old_data["items"], new_items)
+    cleanup_images(old_data["items"], new_items, UPDATES_IMAGE_FOLDER)
 
     return {
         "message": "Feed updated",
@@ -220,10 +234,10 @@ async def overwrite_feed(
     validate_admin(password)
     payload = json.loads(items)
     old_data = load_data(INFO_DATA_FILE)
-    uploaded_files = save_uploaded_files(files)
+    uploaded_files = save_uploaded_files(files, INFO_IMAGE_FOLDER)
     new_items = rebuild_items(payload["items"], uploaded_files)
     save_feed({"items": new_items}, INFO_DATA_FILE)
-    cleanup_images(old_data["items"], new_items)
+    cleanup_images(old_data["items"], new_items, INFO_IMAGE_FOLDER)
 
     return {
         "message": "Feed updated",

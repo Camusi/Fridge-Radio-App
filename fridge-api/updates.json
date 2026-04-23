@@ -14,12 +14,14 @@
           "bold": false,
           "fontSize": 14
         }
-      ]
+      ],
+      "link": null
     },
     {
       "id": "widget-1776929808003-p0piaw",
       "type": "image",
-      "value": "5ca520f3-7bfa-4dd8-b2de-fd0da1f9ce0e_E73B3FB5-D427-4AD7-AA2F-98C9E13BCE99.jpg"
+      "value": "5ca520f3-7bfa-4dd8-b2de-fd0da1f9ce0e_E73B3FB5-D427-4AD7-AA2F-98C9E13BCE99.jpg",
+      "link": null
     },
     {
       "id": "fridge-news-2",
@@ -30,12 +32,14 @@
           "bold": false,
           "fontSize": 14
         }
-      ]
+      ],
+      "link": null
     },
     {
       "id": "widget-1776931234768-ce78kr",
       "type": "image",
-      "value": "4261a817-150a-42da-b193-cab38a757e33_080211BD-7710-41F7-A8F3-3A50A1B4AA13.jpg"
+      "value": "4261a817-150a-42da-b193-cab38a757e33_080211BD-7710-41F7-A8F3-3A50A1B4AA13.jpg",
+      "link": null
     },
     {
       "id": "fridge-news-3",
@@ -46,7 +50,8 @@
           "bold": false,
           "fontSize": 14
         }
-      ]
+      ],
+      "link": null
     },
     {
       "id": "fridge-news-4",
@@ -57,7 +62,8 @@
           "bold": false,
           "fontSize": 14
         }
-      ]
+      ],
+      "link": null
     },
     {
       "id": "fridge-news-5",
@@ -68,7 +74,8 @@
           "bold": false,
           "fontSize": 14
         }
-      ]
+      ],
+      "link": null
     }
   ]
 }
