@@ -14,7 +14,8 @@
           "bold": false,
           "fontSize": 14
         }
-      ]
+      ],
+      "link": null
     },
     {
       "id": "fridge-fm",
@@ -30,7 +31,8 @@
           "bold": false,
           "fontSize": 14
         }
-      ]
+      ],
+      "link": null
     },
     {
       "id": "fridge-bible",
@@ -46,14 +48,15 @@
           "bold": false,
           "fontSize": 14
         }
-      ]
+      ],
+      "link": null
     },
     {
       "id": "fridge-programming",
       "type": "text",
       "value": [
         {
-          "text": "Programming Schedule\n\n",
+          "text": "Schedule\n\n",
           "bold": true,
           "fontSize": 14
         },
@@ -62,7 +65,8 @@
           "bold": false,
           "fontSize": 14
         }
-      ]
+      ],
+      "link": null
     },
     {
       "id": "fridge-about",
@@ -78,7 +82,8 @@
           "bold": false,
           "fontSize": 14
         }
-      ]
+      ],
+      "link": null
     },
     {
       "id": "fridge-values",
@@ -94,7 +99,8 @@
           "bold": false,
           "fontSize": 14
         }
-      ]
+      ],
+      "link": null
     },
     {
       "id": "fridge-contact",
@@ -110,7 +116,8 @@
           "bold": false,
           "fontSize": 14
         }
-      ]
+      ],
+      "link": null
     },
     {
       "id": "widget-1776941324924-agv53h",

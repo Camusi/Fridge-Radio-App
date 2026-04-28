@@ -1,13 +1,13 @@
+import { MaterialIcons } from '@expo/vector-icons';
+import { Image } from 'expo-image';
+import * as ImagePicker from 'expo-image-picker';
 import React, { useEffect, useState } from 'react';
 import { Modal, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import { MaterialIcons } from '@expo/vector-icons';
-import * as ImagePicker from 'expo-image-picker';
-import { Image } from 'expo-image';
 import { WebView } from 'react-native-webview';
 import { API_BASE_URL } from '../../config.local';
-import { updates as updateStyles } from '../styles/updates';
 import { global as globalStyles } from '../styles/global';
 import { info as infoStyles } from '../styles/info';
+import { updates as updateStyles } from '../styles/updates';
 
 
 export type TextSpan = {
@@ -71,7 +71,7 @@ export function useWidgetSection(adminPassword: string | null, feedName: string)
       const response = await fetch(`${API_BASE_URL}/load-feed/${feedName}`);
       if (!response.ok) throw new Error("Failed");
       const data = await response.json();
-      const loadedWidgets = (data.items ?? []).map(normalizeWidgetFromServer);
+      const loadedWidgets = (data.items ?? []).map((item: Widget) => normalizeWidgetFromServer(item, feedName));
       setWidgets(loadedWidgets);
       setIsDirty(false);
     } catch (e) {
@@ -163,7 +163,7 @@ export function useWidgetSection(adminPassword: string | null, feedName: string)
       }
 
       const data = await response.json();
-      setWidgets((data.items || []).map(normalizeWidgetFromServer));
+      setWidgets((data.items || []).map((item: Widget) => normalizeWidgetFromServer(item, feedName)));
       setIsDirty(false);
     } catch (error) {
       setSaveError(error instanceof Error ? error.message : 'Save failed');
@@ -658,17 +658,21 @@ export function WidgetSection({editing, adminPassword, feedName}: {
 const generateWidgetId = () =>
   `widget-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
-const getPublicImageUrl = (value: string) => {
-  if (value.startsWith('http')) return value;
+const getPublicImageUrl = (value: string, feedName: string) => {
+  if (value.startsWith('http')) {
+    // extract just the filename from the malformed full URL
+    const filename = value.split('/').pop() || value.split('\\').pop();
+    return `${API_BASE_URL}/api-images/${feedName}/${filename}`;
+  }
   if (value.startsWith('/api-images/')) return `${API_BASE_URL}${value}`;
-  return `${API_BASE_URL}/api-images/${value}`;
+  return `${API_BASE_URL}/api-images/${feedName}/${value}`;
 };
 
-const normalizeWidgetFromServer = (item: any): Widget => {
+const normalizeWidgetFromServer = (item: any, feedName: string): Widget => {
   const id = item.id ?? generateWidgetId();
 
   if (item.type === 'image') {
-    return { id, type: 'image', content: getPublicImageUrl(item.value), link: item.link };
+    return { id, type: 'image', content: getPublicImageUrl(item.value, feedName), link: item.link };
   }
 
   if (Array.isArray(item.value)) {
