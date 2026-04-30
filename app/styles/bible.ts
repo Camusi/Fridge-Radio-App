@@ -5,7 +5,7 @@ export const bibleStyles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingVertical: 60,
+    paddingVertical: 50,
   },
 
   card: {
@@ -14,6 +14,7 @@ export const bibleStyles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.18)',
     borderRadius: 32,
     padding: 24,
+    paddingBottom: 42,
     alignItems: 'center',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 12 },
@@ -23,7 +24,7 @@ export const bibleStyles = StyleSheet.create({
   },
 
   logoImage: {
-    width: '88%',
+    width: '90%',
     height: 120,
     marginBottom: 24,
   },
