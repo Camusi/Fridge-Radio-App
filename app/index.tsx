@@ -52,6 +52,8 @@ export default function App() {
   }, []);
 
   useEffect(() => {
+    let lastSeen: string | null = null;
+
     const fetchNowPlaying = async () => {
       try {
         const response = await fetch('https://thebible.net.nz/api/now-playing');
@@ -59,17 +61,20 @@ export default function App() {
         const nowPlaying = json?.now_playing ?? json;
         const title = nowPlaying?.Song_Title || '-';
         const artist = nowPlaying?.Song_Artist || '-';
-        setTrackTitle(title || '-');
-        setTrackArtist(artist || '-');
+
+        const key = `${artist}|${title}`;
+        if (key === lastSeen) return; // no change, skip re-render
+        lastSeen = key;
+
+        setTrackTitle(title);
+        setTrackArtist(artist);
       } catch (error) {
-        setTrackTitle('-');
-        setTrackArtist('-');
         console.warn('Unable to load now playing:', error);
       }
     };
 
     fetchNowPlaying();
-    const interval = setInterval(fetchNowPlaying, 30000); // CHANGE THIS TO A WEBSOCKET
+    const interval = setInterval(fetchNowPlaying, 5000);  // Get request every 5 seconds (could upgrade to websocket in future but requires server side updates)
     return () => clearInterval(interval);
   }, []);
 
@@ -157,18 +162,18 @@ export default function App() {
             </Text>
           </View>
 
-            <View style={index.barContainer}>
-            {barValuesRef.current.map((value, indexBar) => (
+          <View style={index.barContainer}>
+            {barValuesRef.current.map((bar, i) => (
               <Animated.View
-                key={indexBar}
+                key={i}
                 style={[
                   index.bar,
                   {
-                    height: value.interpolate({
-                      inputRange: [0.3, 1],
-                      outputRange: [12, 36],
-                    }),
-                  },
+                    transform: [
+                      {translateY: bar.interpolate({ inputRange: [0, 1], outputRange: [0, -12] })},
+                      {scaleY: bar.interpolate({inputRange: [0, 1], outputRange: [0.2, 1],})}
+                    ],
+                  }
                 ]}
               />
             ))}

@@ -118,9 +118,10 @@ export const index = StyleSheet.create({
   barContainer: {
     width: 52,
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'flex-end',
     alignItems: 'flex-end',
     paddingLeft: 8,
+    marginTop: 30
   },
 
   bar: {
