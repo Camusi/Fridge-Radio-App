@@ -27,7 +27,7 @@ export default function App() {
 
         // Load the stream
         const { sound } = await Audio.Sound.createAsync(
-          { uri: 'https://s2.stationplaylist.com:7078/thebible.mp3' },
+          { uri: 'http://s2.stationplaylist.com:7078/thebible.mp3' },
           { shouldPlay: false }
         );
         soundRef.current = sound;
