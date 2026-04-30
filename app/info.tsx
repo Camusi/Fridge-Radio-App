@@ -54,7 +54,9 @@ export default function InfoScreen() {
             <MaterialIcons name="admin-panel-settings" size={20} color="#61616188" />
           </TouchableOpacity>
 
-          <Text style={infoStyles.title}>Info</Text>
+          <View style={infoStyles.infoHeaderTitleWrapper}>
+            <Text style={infoStyles.infoHeaderTitle}>Info</Text>
+          </View>
 
           {/* Edit Button */}
           { adminPassword &&

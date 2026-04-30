@@ -5,15 +5,15 @@ import { LinearGradient } from 'expo-linear-gradient';
 import React, { useEffect, useRef, useState } from 'react';
 import { Animated, TouchableOpacity, View } from 'react-native';
 import { bibleStyles } from './styles/bible';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { clearExclusive, pauseExclusive, playExclusive, subscribeActiveSoundChange } from './util/audioManager';
 
 
 export default function App() {
   const [isPlaying, setIsPlaying] = useState(false);
   const soundRef = useRef<Audio.Sound | null>(null);
-  const barValuesRef = useRef(
-      Array.from({ length: 5 }, () => new Animated.Value(0.4))
-    );
+  const barValuesRef = useRef(Array.from({ length: 5 }, () => new Animated.Value(0.4)));
+  const insets = useSafeAreaInsets();
 
   useEffect(() => {
     const setupAudio = async () => {
@@ -100,7 +100,7 @@ export default function App() {
   }
 
   return (
-    <LinearGradient colors={['#f38200', '#fafd46']} style={bibleStyles.container}>
+    <LinearGradient colors={['#f38200', '#fafd46']} style={[bibleStyles.container, { paddingTop: insets.top}]}>
       <View style={bibleStyles.card}>
         <Image
           source={require('../assets/images/Cool-Fresh-Good-Trans.png')}

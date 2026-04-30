@@ -5,28 +5,25 @@ export const bibleStyles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingVertical: 50,
+    paddingVertical: 110,
   },
 
   card: {
+    flex: 1,
     width: '100%',
     maxWidth: 560,
     backgroundColor: 'rgba(255,255,255,0.18)',
     borderRadius: 32,
     padding: 24,
-    paddingBottom: 42,
+    paddingBottom: 30,
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 12 },
-    shadowOpacity: 0.12,
-    shadowRadius: 24,
-    elevation: 10,
+    justifyContent: 'space-between'
   },
 
   logoImage: {
     width: '90%',
     height: 120,
-    marginBottom: 24,
+    marginBottom: 15,
   },
 
   titleImage: {
@@ -67,7 +64,7 @@ export const bibleStyles = StyleSheet.create({
   barContainer: {
     width: '88%',
     flexDirection: 'row',
-    alignItems: 'center',
+    justifyContent: 'center',
     paddingVertical: 35,
     paddingHorizontal: 120,
     borderRadius: 24,

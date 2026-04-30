@@ -22,7 +22,6 @@ export const info = StyleSheet.create({
     shadowOffset: { width: 0, height: 12 },
     shadowOpacity: 0.12,
     shadowRadius: 24,
-    elevation: 10,
     overflow: 'hidden',
   },
 
@@ -31,14 +30,6 @@ export const info = StyleSheet.create({
     flex: 1,
     paddingTop: '25%',
     paddingHorizontal: 20,
-  },
-
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 25,
-    textAlign: 'center',
-    color: '#333',
   },
 
   // Info text block
@@ -150,7 +141,6 @@ export const info = StyleSheet.create({
   adminButton: {
     width: 50,
     height: 50,
-    marginBottom: 20,
     borderRadius: 28,
     justifyContent: 'center',
     alignItems: 'center',
@@ -158,7 +148,6 @@ export const info = StyleSheet.create({
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
     shadowRadius: 8,
-    elevation: 6,
   },
 
   adminButtonActive: {
@@ -183,7 +172,7 @@ export const info = StyleSheet.create({
   editButton: {
     width: 50,
     height: 50,
-    marginBottom: 20,
+    marginLeft: 'auto',
     borderRadius: 28,
     justifyContent: 'center',
     alignItems: 'center',
@@ -191,7 +180,6 @@ export const info = StyleSheet.create({
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
     shadowRadius: 8,
-    elevation: 6,
   },
 
   editButtonActive: {
@@ -203,9 +191,23 @@ export const info = StyleSheet.create({
   },
 
   infoHeader: {
-    alignItems: 'center',
-    justifyContent: 'flex-start',
     flexDirection: 'row',
-    gap: 90
+    alignItems: 'center',
+    marginBottom: 25,
+    width: '100%'
+  },
+
+  infoHeaderTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#333'
+  },
+
+  infoHeaderTitleWrapper: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+    pointerEvents: 'none'
   }
 });

@@ -16,6 +16,7 @@ export function PasswordModal({ visible, password, setPassword, onCancel, onSubm
     <Modal
       visible={visible}
       transparent
+      statusBarTranslucent
       animationType="fade"
       onRequestClose={onCancel}
     >

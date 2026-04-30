@@ -20,7 +20,6 @@ export const layoutStyles = StyleSheet.create({
     shadowOffset: { width: 0, height: 10 },
     shadowOpacity: 0.08,
     shadowRadius: 18,
-    elevation: 10,
-    overflow: 'hidden',
+    elevation: 0
   },
 });

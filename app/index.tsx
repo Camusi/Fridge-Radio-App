@@ -4,6 +4,7 @@ import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Text, TouchableOpacity, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { index } from './styles';
 import { clearExclusive, pauseExclusive, playExclusive, subscribeActiveSoundChange } from './util/audioManager';
 
@@ -12,10 +13,9 @@ export default function App() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [trackTitle, setTrackTitle] = useState<string>('-');
   const [trackArtist, setTrackArtist] = useState<string>('-');
-  const barValuesRef = useRef(
-    Array.from({ length: 5 }, () => new Animated.Value(0.4))
-  );
+  const barValuesRef = useRef(Array.from({ length: 5 }, () => new Animated.Value(0.4)));
   const soundRef = useRef<Audio.Sound | null>(null);
+  const insets = useSafeAreaInsets();
 
   useEffect(() => {
     const setupAudio = async () => {
@@ -133,7 +133,7 @@ export default function App() {
   };
 
   return (
-    <LinearGradient colors={['#00a8f3', '#8cfffb']} style={index.container}>
+    <LinearGradient colors={['#00a8f3', '#8cfffb']} style={[index.container, { paddingTop: insets.top}]}>
       <View style={index.card}>
         <Image
           source={require('../assets/images/Cool-Fresh-Good-Trans.png')}

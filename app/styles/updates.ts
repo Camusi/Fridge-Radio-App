@@ -5,7 +5,7 @@ export const updates = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingVertical: 10,
+    paddingBottom: 11,
     justifyContent: 'center',
     backgroundColor: '#f5f5f5',
   },
@@ -13,7 +13,7 @@ export const updates = StyleSheet.create({
   card: {
     width: '100%',
     maxWidth: 560,
-    backgroundColor: 'rgba(255,255,255,0.18)',
+    backgroundColor: 'rgba(255, 255, 255, 0)',
     borderRadius: 32,
     padding: 24,
     height: '88%',
@@ -21,20 +21,10 @@ export const updates = StyleSheet.create({
     shadowOffset: { width: 0, height: 12 },
     shadowOpacity: 0.12,
     shadowRadius: 24,
-    elevation: 10,
-    overflow: 'hidden',
   },
 
   scrollView: {
     flex: 1,
-  },
-
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 25,
-    textAlign: 'center',
-    color: '#333',
   },
 
   widgetContainer: {
@@ -49,7 +39,6 @@ export const updates = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
-    elevation: 3,
   },
 
   widgetText: {
@@ -163,7 +152,6 @@ export const updates = StyleSheet.create({
   adminButton: {
     width: 50,
     height: 50,
-    marginBottom: 20,
     borderRadius: 28,
     justifyContent: 'center',
     alignItems: 'center',
@@ -171,7 +159,6 @@ export const updates = StyleSheet.create({
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
     shadowRadius: 8,
-    elevation: 6,
   },
 
   adminButtonActive: {
@@ -185,7 +172,7 @@ export const updates = StyleSheet.create({
   editButton: {
     width: 50,
     height: 50,
-    marginBottom: 20,
+    marginLeft: 'auto',
     borderRadius: 28,
     justifyContent: 'center',
     alignItems: 'center',
@@ -193,7 +180,6 @@ export const updates = StyleSheet.create({
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
     shadowRadius: 8,
-    elevation: 6,
   },
 
   editButtonActive: {
@@ -205,9 +191,23 @@ export const updates = StyleSheet.create({
   },
 
   updatesHeader: {
-    alignItems: 'center',
-    justifyContent: 'flex-start',
     flexDirection: 'row',
-    gap: 65
+    alignItems: 'center',
+    marginBottom: 25,
+    width: '100%',
+  },
+
+  updatesHeaderTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#333'
+  },
+
+  updatesHeaderTitleWrapper: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+    pointerEvents: 'none'
   }
 });

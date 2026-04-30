@@ -55,8 +55,10 @@ export default function UpdatesScreen() {
           >
             <MaterialIcons name="admin-panel-settings" size={20} color="#61616188" />
           </TouchableOpacity>
-
-          <Text style={updateStyles.title}>Updates</Text>
+  
+          <View style={updateStyles.updatesHeaderTitleWrapper}>
+            <Text style={updateStyles.updatesHeaderTitle}>Updates</Text>
+          </View>
 
           {/* Edit Button */}
           { adminPassword &&

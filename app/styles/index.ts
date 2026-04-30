@@ -1,16 +1,17 @@
-import { StyleSheet } from 'react-native';
+import { StyleSheet, Platform } from 'react-native';
+
+const isAndroid = Platform.OS === 'android';
 
 export const index = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'flex-start',
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingTop: 50,
-    paddingBottom: 24,
+    paddingVertical: 110,
   },
 
   card: {
+    flex: 1,
     width: '100%',
     maxWidth: 560,
     backgroundColor: 'rgba(255,255,255,0.18)',
@@ -18,11 +19,7 @@ export const index = StyleSheet.create({
     padding: 24,
     paddingBottom: 30,
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 12 },
-    shadowOpacity: 0.12,
-    shadowRadius: 24,
-    elevation: 10,
+    justifyContent: 'space-between'
   },
 
   logoImage: {
@@ -46,10 +43,12 @@ export const index = StyleSheet.create({
     borderColor: '#7ef0ff',
     justifyContent: 'center',
     alignItems: 'center',
+    // iOS cyan glow shadow
     shadowColor: '#39c7ff',
     shadowOffset: { width: 0, height: 10 },
     shadowOpacity: 0.22,
     shadowRadius: 16,
+    // Android: elevation alone won't give cyan — use a wrapper View trick or accept grey shadow
     elevation: 7,
     marginBottom: 20,
     padding: 10,
@@ -93,7 +92,8 @@ export const index = StyleSheet.create({
   trackLabel: {
     color: '#f7ffff',
     textTransform: 'uppercase',
-    letterSpacing: 1.6,
+    // Android renders letterSpacing differently — reduce slightly
+    letterSpacing: isAndroid ? 1.2 : 1.6,
     fontSize: 10,
     marginBottom: 4,
   },
@@ -103,17 +103,26 @@ export const index = StyleSheet.create({
     fontSize: 17,
     fontWeight: '700',
     marginBottom: 2,
-    textShadowColor: 'rgba(0,0,0,0.25)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 2,
+    // textShadow is iOS-only; on Android use nothing (or a subtle opacity trick)
+    ...(isAndroid
+      ? {}
+      : {
+          textShadowColor: 'rgba(0,0,0,0.25)',
+          textShadowOffset: { width: 0, height: 1 },
+          textShadowRadius: 2,
+        }),
   },
 
   trackArtist: {
     color: '#e8ffff',
     fontSize: 13,
-    textShadowColor: 'rgba(0,0,0,0.18)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 1.5,
+    ...(isAndroid
+      ? {}
+      : {
+          textShadowColor: 'rgba(0,0,0,0.18)',
+          textShadowOffset: { width: 0, height: 1 },
+          textShadowRadius: 1.5,
+        }),
   },
 
   barContainer: {
@@ -122,7 +131,7 @@ export const index = StyleSheet.create({
     justifyContent: 'flex-end',
     alignItems: 'flex-end',
     paddingLeft: 8,
-    marginTop: 30
+    marginTop: 30,
   },
 
   bar: {
