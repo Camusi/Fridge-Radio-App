@@ -36,7 +36,6 @@ fridge-api/config.json
 
 # typescript
 *.tsbuildinfo
-config.local.ts
 
 app-example
 
