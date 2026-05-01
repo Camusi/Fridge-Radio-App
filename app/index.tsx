@@ -1,53 +1,34 @@
 import { MaterialIcons } from '@expo/vector-icons';
-import { Audio } from 'expo-av';
+import { useAudioPlayer, setAudioModeAsync } from 'expo-audio';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { index } from './styles';
-import { clearExclusive, pauseExclusive, playExclusive, subscribeActiveSoundChange } from './util/audioManager';
-
+import { index } from '../styles';
+import { clearExclusive, pauseExclusive, playExclusive, subscribeActiveSoundChange } from '../util/audioManager';
 
 export default function App() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [trackTitle, setTrackTitle] = useState<string>('-');
   const [trackArtist, setTrackArtist] = useState<string>('-');
   const barValuesRef = useRef(Array.from({ length: 5 }, () => new Animated.Value(0.4)));
-  const soundRef = useRef<Audio.Sound | null>(null);
   const insets = useSafeAreaInsets();
 
-  useEffect(() => {
-    const setupAudio = async () => {
-      try {
-        // Configure audio session for background playback
-        await Audio.setAudioModeAsync({
-          staysActiveInBackground: true,
-          playsInSilentModeIOS: true,
-          shouldDuckAndroid: true,
-        });
+  const player = useAudioPlayer({ uri: 'http://s2.stationplaylist.com:7078/listen.mp3' });
 
-        // Load the stream
-        const { sound } = await Audio.Sound.createAsync(
-          { uri: 'http://s2.stationplaylist.com:7078/listen.mp3' },
-          { shouldPlay: false }
-        );
-        soundRef.current = sound;
+  useEffect(() => {
+    const setup = async () => {
+      try {
+        await setAudioModeAsync({playsInSilentMode: true});
       } catch (error) {
-        console.error('Error loading sound:', error);
+        console.error('Error setting audio mode:', error);
       }
     };
-
-    setupAudio();
+    setup();
 
     return () => {
-      if (soundRef.current) {
-        if (isPlaying) {
-          pauseExclusive(soundRef.current).catch(() => {});
-        }
-        clearExclusive(soundRef.current);
-        soundRef.current.unloadAsync();
-      }
+      clearExclusive(player);
     };
   }, []);
 
@@ -63,7 +44,7 @@ export default function App() {
         const artist = nowPlaying?.Song_Artist || '-';
 
         const key = `${artist}|${title}`;
-        if (key === lastSeen) return; // no change, skip re-render
+        if (key === lastSeen) return;
         lastSeen = key;
 
         setTrackTitle(title);
@@ -74,35 +55,25 @@ export default function App() {
     };
 
     fetchNowPlaying();
-    const interval = setInterval(fetchNowPlaying, 5000);  // Get request every 5 seconds (could upgrade to websocket in future but requires server side updates)
+    const interval = setInterval(fetchNowPlaying, 5000);
     return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {
-    const unsubscribe = subscribeActiveSoundChange(activeSound => {
-      if (soundRef.current) {
-        setIsPlaying(activeSound === soundRef.current);
-      }
+    const unsubscribe = subscribeActiveSoundChange(activePlayer => {
+      setIsPlaying(activePlayer === player);
     });
     return unsubscribe;
-  }, []);
+  }, [player]);
 
   useEffect(() => {
     const barValues = barValuesRef.current;
-    const animations = barValues.map((bar, index) => {
-      const duration = 520 + index * 80;
+    const animations = barValues.map((bar, i) => {
+      const duration = 520 + i * 80;
       return Animated.loop(
         Animated.sequence([
-          Animated.timing(bar, {
-            toValue: 1,
-            duration,
-            useNativeDriver: false,
-          }),
-          Animated.timing(bar, {
-            toValue: 0.35,
-            duration,
-            useNativeDriver: false,
-          }),
+          Animated.timing(bar, { toValue: 1, duration, useNativeDriver: false }),
+          Animated.timing(bar, { toValue: 0.35, duration, useNativeDriver: false }),
         ]),
       );
     });
@@ -121,70 +92,46 @@ export default function App() {
   }, [isPlaying]);
 
   const togglePlayPause = async () => {
-    if (!soundRef.current) return;
-
     if (isPlaying) {
-      await pauseExclusive(soundRef.current);
+      await pauseExclusive(player);
       setIsPlaying(false);
     } else {
-      await playExclusive(soundRef.current);
+      await playExclusive(player);
       setIsPlaying(true);
     }
   };
 
   return (
-    <LinearGradient colors={['#00a8f3', '#8cfffb']} style={[index.container, { paddingTop: insets.top}]}>
+    <LinearGradient colors={['#00a8f3', '#8cfffb']} style={[index.container, { paddingTop: insets.top }]}>
       <View style={index.card}>
-        <Image
-          source={require('../assets/images/Cool-Fresh-Good-Trans.png')}
-          style={index.logoImage}
-          contentFit="contain"
-        />
-        <Image
-          source={require('../assets/images/Title-Trans.png')}
-          style={index.titleImage}
-          contentFit="contain"
-        />
+        <Image source={require('../assets/images/Cool-Fresh-Good-Trans.png')} style={index.logoImage} contentFit="contain" />
+        <Image source={require('../assets/images/Title-Trans.png')} style={index.titleImage} contentFit="contain" />
         <View style={index.buttonContainer}>
           <TouchableOpacity style={index.button} onPress={togglePlayPause}>
             <MaterialIcons name={isPlaying ? 'pause-circle-filled' : 'play-circle-filled'} size={56} color="#ffffff" />
           </TouchableOpacity>
         </View>
-
         <View style={index.trackRow}>
           <View style={index.trackInfoContainer}>
             <Text style={index.trackLabel}>Now playing</Text>
-            <Text style={index.trackTitle} numberOfLines={1} ellipsizeMode="tail">
-              {trackTitle || '-'}
-            </Text>
-            <Text style={index.trackArtist} numberOfLines={1} ellipsizeMode="tail">
-              {trackArtist || '-'}
-            </Text>
+            <Text style={index.trackTitle} numberOfLines={1} ellipsizeMode="tail">{trackTitle || '-'}</Text>
+            <Text style={index.trackArtist} numberOfLines={1} ellipsizeMode="tail">{trackArtist || '-'}</Text>
           </View>
-
           <View style={index.barContainer}>
             {barValuesRef.current.map((bar, i) => (
               <Animated.View
                 key={i}
-                style={[
-                  index.bar,
-                  {
-                    transform: [
-                      {translateY: bar.interpolate({ inputRange: [0, 1], outputRange: [0, -12] })},
-                      {scaleY: bar.interpolate({inputRange: [0, 1], outputRange: [0.2, 1],})}
-                    ],
-                  }
-                ]}
+                style={[index.bar, {
+                  transform: [
+                    { translateY: bar.interpolate({ inputRange: [0, 1], outputRange: [0, -12] }) },
+                    { scaleY: bar.interpolate({ inputRange: [0, 1], outputRange: [0.2, 1] }) }
+                  ],
+                }]}
               />
             ))}
           </View>
         </View>
-
-        <Image
-          source={require('../assets/images/Fridge-Icon-Blue.png')}
-          style={index.fridgeImage}
-          contentFit="contain"
-        />
+        <Image source={require('../assets/images/Fridge-Icon-Blue.png')} style={index.fridgeImage} contentFit="contain" />
       </View>
     </LinearGradient>
   );

@@ -2,8 +2,8 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { Tabs, useRouter, useSegments } from 'expo-router';
 import React, { useMemo } from 'react';
 import { PanResponder, View } from 'react-native';
-import { layoutStyles } from './styles/layout';
-import { Provider } from '../app/context/context';
+import { Provider } from '../context/context';
+import { layoutStyles } from '../styles/layout';
 
 export default function RootLayout() {
   const router = useRouter();

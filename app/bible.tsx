@@ -1,90 +1,59 @@
 import { MaterialIcons } from '@expo/vector-icons';
-import { Audio } from 'expo-av';
+import { useAudioPlayer, setAudioModeAsync } from 'expo-audio';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useEffect, useRef, useState } from 'react';
 import { Animated, TouchableOpacity, View } from 'react-native';
-import { bibleStyles } from './styles/bible';
+import { bibleStyles } from '../styles/bible';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { clearExclusive, pauseExclusive, playExclusive, subscribeActiveSoundChange } from './util/audioManager';
-
+import { clearExclusive, pauseExclusive, playExclusive, subscribeActiveSoundChange } from '../util/audioManager';
 
 export default function App() {
   const [isPlaying, setIsPlaying] = useState(false);
-  const soundRef = useRef<Audio.Sound | null>(null);
   const barValuesRef = useRef(Array.from({ length: 5 }, () => new Animated.Value(0.4)));
   const insets = useSafeAreaInsets();
 
-  useEffect(() => {
-    const setupAudio = async () => {
-      try {
-        // Configure audio session for background playback
-        await Audio.setAudioModeAsync({
-          staysActiveInBackground: true,
-          playsInSilentModeIOS: true,
-          shouldDuckAndroid: true,
-        });
+  const player = useAudioPlayer({ uri: 'http://s2.stationplaylist.com:7078/thebible.mp3' });
 
-        // Load the stream
-        const { sound } = await Audio.Sound.createAsync(
-          { uri: 'http://s2.stationplaylist.com:7078/thebible.mp3' },
-          { shouldPlay: false }
-        );
-        soundRef.current = sound;
+  useEffect(() => {
+    const setup = async () => {
+      try {
+        await setAudioModeAsync({playsInSilentMode: true});
       } catch (error) {
-        console.error('Error loading sound:', error);
+        console.error('Error setting audio mode:', error);
       }
     };
-
-    setupAudio();
+    setup();
 
     return () => {
-      if (soundRef.current) {
-        if (isPlaying) {
-          pauseExclusive(soundRef.current).catch(() => {});
-        }
-        clearExclusive(soundRef.current);
-        soundRef.current.unloadAsync();
-      }
+      clearExclusive(player);
     };
   }, []);
 
   useEffect(() => {
-    const unsubscribe = subscribeActiveSoundChange(activeSound => {
-      if (soundRef.current) {
-        setIsPlaying(activeSound === soundRef.current);
-      }
+    const unsubscribe = subscribeActiveSoundChange(activePlayer => {
+      setIsPlaying(activePlayer === player);
     });
     return unsubscribe;
-  }, []);
+  }, [player]);
 
   const togglePlayPause = async () => {
-    if (!soundRef.current) return;
-
     if (isPlaying) {
-      await pauseExclusive(soundRef.current);
+      await pauseExclusive(player);
       setIsPlaying(false);
     } else {
-      await playExclusive(soundRef.current);
+      await playExclusive(player);
       setIsPlaying(true);
     }
   };
 
   const barValues = barValuesRef.current;
-  const animations = barValues.map((bar, index) => {
-    const duration = 520 + index * 80;
+  const animations = barValues.map((bar, i) => {
+    const duration = 520 + i * 80;
     return Animated.loop(
       Animated.sequence([
-        Animated.timing(bar, {
-          toValue: 1,
-          duration,
-          useNativeDriver: false,
-        }),
-        Animated.timing(bar, {
-          toValue: 0.35,
-          duration,
-          useNativeDriver: false,
-        }),
+        Animated.timing(bar, { toValue: 1, duration, useNativeDriver: false }),
+        Animated.timing(bar, { toValue: 0.35, duration, useNativeDriver: false }),
       ]),
     );
   });
@@ -100,38 +69,21 @@ export default function App() {
   }
 
   return (
-    <LinearGradient colors={['#f38200', '#fafd46']} style={[bibleStyles.container, { paddingTop: insets.top}]}>
+    <LinearGradient colors={['#f38200', '#fafd46']} style={[bibleStyles.container, { paddingTop: insets.top }]}>
       <View style={bibleStyles.card}>
-        <Image
-          source={require('../assets/images/Cool-Fresh-Good-Trans.png')}
-          style={bibleStyles.logoImage}
-          contentFit="contain"
-        />
-        <Image
-          source={require('../assets/images/The-Bible-Title-Trans.png')}
-          style={bibleStyles.titleImage}
-          contentFit="contain"
-        />
+        <Image source={require('../assets/images/Cool-Fresh-Good-Trans.png')} style={bibleStyles.logoImage} contentFit="contain" />
+        <Image source={require('../assets/images/The-Bible-Title-Trans.png')} style={bibleStyles.titleImage} contentFit="contain" />
         <View style={bibleStyles.buttonContainer}>
           <TouchableOpacity style={bibleStyles.button} onPress={togglePlayPause}>
             <MaterialIcons name={isPlaying ? 'pause-circle-filled' : 'play-circle-filled'} size={56} color="#ffffff" />
           </TouchableOpacity>
-      </View>
+        </View>
         <View style={bibleStyles.barContainer}>
-          {barValuesRef.current.map((value, indexBar) => (
-            <Animated.View
-              key={indexBar}
-              style={[
-                bibleStyles.bar, {  transform: [{  scaleY: value,  },],  },
-              ]}
-            />
+          {barValuesRef.current.map((value, i) => (
+            <Animated.View key={i} style={[bibleStyles.bar, { transform: [{ scaleY: value }] }]} />
           ))}
         </View>
-        <Image
-          source={require('../assets/images/Bible-Penguin-Trans.png')}
-          style={bibleStyles.penguinImage}
-          contentFit="contain"
-        />
+        <Image source={require('../assets/images/Bible-Penguin-Trans.png')} style={bibleStyles.penguinImage} contentFit="contain" />
       </View>
     </LinearGradient>
   );

@@ -1,11 +1,11 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useState } from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
-import { PasswordModal } from './components/PasswordModal';
-import { WidgetSection } from './components/WidgetSection';
-import { useGlobalContext } from './context/context';
-import { updates as updateStyles } from './styles/updates';
-import { checkPassword, hashPassword } from './util/passwordCheck';
+import { PasswordModal } from '../components/PasswordModal';
+import { WidgetSection } from '../components/WidgetSection';
+import { useGlobalContext } from '../context/context';
+import { updates as updateStyles } from '../styles/updates';
+import { checkPassword, hashPassword } from '../util/passwordCheck';
 
 
 export default function UpdatesScreen() {

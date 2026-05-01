@@ -4,7 +4,7 @@ import * as ImagePicker from 'expo-image-picker';
 import React, { useEffect, useState } from 'react';
 import { Modal, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { WebView } from 'react-native-webview';
-import { API_BASE_URL } from '../../config.local';
+import { API_BASE_URL } from '../config.local';
 import { global as globalStyles } from '../styles/global';
 import { info as infoStyles } from '../styles/info';
 import { updates as updateStyles } from '../styles/updates';

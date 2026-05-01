@@ -1,5 +1,5 @@
-import { API_BASE_URL } from '../../config.local';
 import * as Crypto from 'expo-crypto';
+import { API_BASE_URL } from '../config.local';
 
 export const checkPassword = async (passwordHash: string): Promise<boolean> => {
   try {
