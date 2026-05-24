@@ -15,12 +15,23 @@ export default function App() {
   const barValuesRef = useRef(Array.from({ length: 5 }, () => new Animated.Value(0.4)));
   const insets = useSafeAreaInsets();
 
-  const player = useAudioPlayer({ uri: 'https://s2.stationplaylist.com:7078/listen.mp3' });
+  const playerRef = useRef(
+    useAudioPlayer({
+      uri: 'https://s2.stationplaylist.com:7078/listen.mp3',
+    })
+  );
+
+const player = playerRef.current;
 
   useEffect(() => {
     const setup = async () => {
       try {
-        await setAudioModeAsync({playsInSilentMode: true});
+        await setAudioModeAsync({
+          playsInSilentMode: true,
+          shouldPlayInBackground: true,
+          interruptionMode: 'duckOthers',
+          shouldRouteThroughEarpiece: false,
+        });
       } catch (error) {
         console.error('Error setting audio mode:', error);
       }
@@ -92,12 +103,17 @@ export default function App() {
   }, [isPlaying]);
 
   const togglePlayPause = async () => {
-    if (isPlaying) {
-      await pauseExclusive(player);
+    try {
+      if (isPlaying) {
+        await pauseExclusive(player);
+        setIsPlaying(false);
+      } else {
+        await playExclusive(player);
+        setIsPlaying(true);
+      }
+    } catch (error) {
+      console.error('Toggle playback failed:', error);
       setIsPlaying(false);
-    } else {
-      await playExclusive(player);
-      setIsPlaying(true);
     }
   };
 
