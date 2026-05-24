@@ -27,7 +27,7 @@
       "predictiveBackGestureEnabled": false,
       "usesCleartextTraffic": true,
       "package": "nz.net.thebible.fridge",
-      "permissions": ["android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK"]
+      "permissions": ["android.permission.INTERNET", "android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK"]
     },
     "web": {
       "output": "static",

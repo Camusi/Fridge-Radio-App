@@ -13,7 +13,7 @@ export default function App() {
   const barValuesRef = useRef(Array.from({ length: 5 }, () => new Animated.Value(0.4)));
   const insets = useSafeAreaInsets();
 
-  const player = useAudioPlayer({ uri: 'http://s2.stationplaylist.com:7078/thebible.mp3' });
+  const player = useAudioPlayer({ uri: 'https://s2.stationplaylist.com:7078/thebible.mp3' });
 
   useEffect(() => {
     const setup = async () => {

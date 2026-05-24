@@ -1,5 +1,5 @@
 import { MaterialIcons } from '@expo/vector-icons';
-import { useAudioPlayer, setAudioModeAsync } from 'expo-audio';
+import { setAudioModeAsync, useAudioPlayer } from 'expo-audio';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useEffect, useRef, useState } from 'react';
@@ -15,7 +15,7 @@ export default function App() {
   const barValuesRef = useRef(Array.from({ length: 5 }, () => new Animated.Value(0.4)));
   const insets = useSafeAreaInsets();
 
-  const player = useAudioPlayer({ uri: 'http://s2.stationplaylist.com:7078/listen.mp3' });
+  const player = useAudioPlayer({ uri: 'https://s2.stationplaylist.com:7078/listen.mp3' });
 
   useEffect(() => {
     const setup = async () => {
