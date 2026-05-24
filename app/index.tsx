@@ -15,13 +15,7 @@ export default function App() {
   const barValuesRef = useRef(Array.from({ length: 5 }, () => new Animated.Value(0.4)));
   const insets = useSafeAreaInsets();
 
-  const playerRef = useRef(
-    useAudioPlayer({
-      uri: 'https://s2.stationplaylist.com:7078/listen.mp3',
-    })
-  );
-
-const player = playerRef.current;
+  const player = useAudioPlayer({ uri: 'https://s2.stationplaylist.com:7078/listen.mp3' });
 
   useEffect(() => {
     const setup = async () => {

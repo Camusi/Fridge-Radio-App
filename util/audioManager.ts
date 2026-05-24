@@ -1,7 +1,6 @@
 import { AudioPlayer } from 'expo-audio';
 
 let activePlayer: AudioPlayer | null = null;
-
 const listeners = new Set<(active: AudioPlayer | null) => void>();
 
 const notifyListeners = (active: AudioPlayer | null) => {
@@ -14,38 +13,26 @@ export async function playExclusive(player: AudioPlayer) {
       await activePlayer.pause();
     }
   } catch (error) {
-    console.warn('Error pausing active player:', error);
+    console.warn('Error pausing active player', error);
   }
 
   activePlayer = player;
   notifyListeners(activePlayer);
 
   try {
+    console.log('Attempting playback');
     await player.play();
-    setTimeout(() => {
-      try {
-        console.log('Current player state:', {
-          playing: activePlayer === player,
-        });
-      } catch (e) {
-        console.warn('Unable to inspect player state:', e);
-      }
-    }, 1000);
+    console.log('Playback started');
   } catch (error) {
     console.error('PLAYBACK ERROR:', error);
-
-    activePlayer = null;
-    notifyListeners(activePlayer);
-
-    throw error;
   }
 }
 
 export async function pauseExclusive(player: AudioPlayer) {
   try {
-    await player.pause();
+    player.pause();
   } catch (error) {
-    console.warn('Error pausing player:', error);
+    console.warn('Error pausing player', error);
   }
 
   if (activePlayer === player) {
@@ -55,32 +42,20 @@ export async function pauseExclusive(player: AudioPlayer) {
 }
 
 export function clearExclusive(player: AudioPlayer | null) {
-  try {
-    if (activePlayer === player) {
-      console.log('Clearing active player');
-
-      activePlayer = null;
-      notifyListeners(activePlayer);
-    }
-  } catch (error) {
-    console.warn('Error clearing player:', error);
+  if (activePlayer === player) {
+    activePlayer = null;
+    notifyListeners(activePlayer);
   }
 }
 
-export function subscribeActiveSoundChange(
-  listener: (active: AudioPlayer | null) => void
-) {
+export function subscribeActiveSoundChange(listener: (active: AudioPlayer | null) => void) {
   listeners.add(listener);
-
   listener(activePlayer);
-
   return () => {
     listeners.delete(listener);
   };
 }
 
-export function unsubscribeActiveSoundChange(
-  listener: (active: AudioPlayer | null) => void
-) {
+export function unsubscribeActiveSoundChange(listener: (active: AudioPlayer | null) => void) {
   listeners.delete(listener);
 }
