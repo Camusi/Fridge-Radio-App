@@ -1,12 +1,15 @@
 import { MaterialIcons } from '@expo/vector-icons';
-import { setAudioModeAsync, useAudioPlayer } from 'expo-audio';
+import { setAudioModeAsync, useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useEffect, useRef, useState } from 'react';
-import { Animated, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Animated, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { index } from '../styles';
 import { clearExclusive, pauseExclusive, playExclusive, subscribeActiveSoundChange } from '../util/audioManager';
+
+const STREAM_URI = 'https://s2.stationplaylist.com:7078/listen.mp3';
+const STREAM_HEADERS = { 'Icy-MetaData': '0' };
 
 export default function App() {
   const [isPlaying, setIsPlaying] = useState(false);
@@ -15,13 +18,8 @@ export default function App() {
   const barValuesRef = useRef(Array.from({ length: 5 }, () => new Animated.Value(0.4)));
   const insets = useSafeAreaInsets();
 
-  const playerRef = useRef(
-    useAudioPlayer({
-      uri: 'https://s2.stationplaylist.com:7078/listen.mp3',
-    })
-  );
-
-const player = playerRef.current;
+  const player = useAudioPlayer({ uri: STREAM_URI, headers: STREAM_HEADERS });
+  const status = useAudioPlayerStatus(player);
 
   useEffect(() => {
     const setup = async () => {
@@ -42,6 +40,15 @@ const player = playerRef.current;
       clearExclusive(player);
     };
   }, []);
+
+  // Reconnect if stream drops while supposed to be playing
+  useEffect(() => {
+    if (!isPlaying || status.isBuffering || status.playing) return;
+    const timeout = setTimeout(() => {
+      player.replace({ uri: STREAM_URI, headers: STREAM_HEADERS });
+    }, 3000);
+    return () => clearTimeout(timeout);
+  }, [isPlaying, status.playing, status.isBuffering]);
 
   useEffect(() => {
     let lastSeen: string | null = null;
@@ -124,7 +131,10 @@ const player = playerRef.current;
         <Image source={require('../assets/images/Title-Trans.png')} style={index.titleImage} contentFit="contain" />
         <View style={index.buttonContainer}>
           <TouchableOpacity style={index.button} onPress={togglePlayPause}>
-            <MaterialIcons name={isPlaying ? 'pause-circle-filled' : 'play-circle-filled'} size={56} color="#ffffff" />
+            {isPlaying && status.isBuffering
+              ? <ActivityIndicator size="large" color="#ffffff" />
+              : <MaterialIcons name={isPlaying ? 'pause-circle-filled' : 'play-circle-filled'} size={56} color="#ffffff" />
+            }
           </TouchableOpacity>
         </View>
         <View style={index.trackRow}>
