@@ -1,54 +1,122 @@
 import { MaterialIcons } from '@expo/vector-icons';
-import { setAudioModeAsync, useAudioPlayer, useAudioPlayerStatus } from 'expo-audio';
+import { Audio, AVPlaybackStatus, InterruptionModeAndroid, InterruptionModeIOS } from 'expo-av';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Animated, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Animated, Platform, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { index } from '../styles';
 import { clearExclusive, pauseExclusive, playExclusive, subscribeActiveSoundChange } from '../util/audioManager';
 
-const STREAM_URI = 'https://s2.stationplaylist.com:7078/listen.mp3';
-const STREAM_HEADERS = { 'Icy-MetaData': '0' };
+// Android's MediaPlayer/ExoPlayer fails on TLS over non-standard ports.
+// HTTP works and usesCleartextTraffic is already enabled in app.json.
+// iOS ATS requires HTTPS, and HTTPS works fine there.
+const STREAM_URI = Platform.OS === 'android'
+  ? 'http://s2.stationplaylist.com:7078/listen.mp3'
+  : 'https://s2.stationplaylist.com:7078/listen.mp3';
 
 export default function App() {
   const [isPlaying, setIsPlaying] = useState(false);
+  const [isBuffering, setIsBuffering] = useState(false);
   const [trackTitle, setTrackTitle] = useState<string>('-');
   const [trackArtist, setTrackArtist] = useState<string>('-');
+  const [sound, setSound] = useState<Audio.Sound | null>(null);
   const barValuesRef = useRef(Array.from({ length: 5 }, () => new Animated.Value(0.4)));
   const insets = useSafeAreaInsets();
-
-  const player = useAudioPlayer({ uri: STREAM_URI, headers: STREAM_HEADERS });
-  const status = useAudioPlayerStatus(player);
+  const isPlayingRef = useRef(false);
+  isPlayingRef.current = isPlaying;
 
   useEffect(() => {
+    let s: Audio.Sound | null = null;
+    let mounted = true;
+
     const setup = async () => {
       try {
-        await setAudioModeAsync({
-          playsInSilentMode: true,
-          shouldPlayInBackground: true,
-          interruptionMode: 'duckOthers',
-          shouldRouteThroughEarpiece: false,
+        await Audio.setAudioModeAsync({
+          playsInSilentModeIOS: true,
+          staysActiveInBackground: true,
+          interruptionModeIOS: InterruptionModeIOS.DuckOthers,
+          interruptionModeAndroid: InterruptionModeAndroid.DuckOthers,
+          shouldDuckAndroid: true,
+          playThroughEarpieceAndroid: false,
         });
+
+        s = new Audio.Sound();
+
+        s.setOnPlaybackStatusUpdate((status: AVPlaybackStatus) => {
+          if (!mounted) return;
+
+          if (!status.isLoaded) {
+            setIsBuffering(false);
+            if (status.error) {
+              console.error('Stream error:', status.error);
+              // Reconnect after error if we should be playing
+              if (isPlayingRef.current) {
+                setTimeout(async () => {
+                  if (!mounted || !s) return;
+                  try {
+                    await s.loadAsync(
+                      { uri: STREAM_URI },
+                      { shouldPlay: true }
+                    );
+                  } catch (e) {
+                    console.warn('Reconnect failed:', e);
+                  }
+                }, 3000);
+              }
+            }
+            return;
+          }
+
+          setIsBuffering(status.isBuffering);
+
+          // Live streams shouldn't finish — reconnect if they do
+          if (status.didJustFinish && isPlayingRef.current) {
+            setTimeout(async () => {
+              if (!mounted || !s) return;
+              try {
+                await s.unloadAsync();
+                await s.loadAsync(
+                  { uri: STREAM_URI },
+                  { shouldPlay: true }
+                );
+              } catch (e) {
+                console.warn('Reconnect after finish failed:', e);
+              }
+            }, 1000);
+          }
+        });
+
+        await s.loadAsync(
+          { uri: STREAM_URI },
+          { shouldPlay: false, progressUpdateIntervalMillis: 500 }
+        );
+
+        if (mounted) setSound(s);
       } catch (error) {
-        console.error('Error setting audio mode:', error);
+        console.error('Audio setup error:', error);
       }
     };
+
     setup();
 
     return () => {
-      clearExclusive(player);
+      mounted = false;
+      if (s) {
+        clearExclusive(s);
+        s.setOnPlaybackStatusUpdate(null);
+        s.unloadAsync().catch(console.warn);
+      }
     };
   }, []);
 
-  // Reconnect if stream drops while supposed to be playing
   useEffect(() => {
-    if (!isPlaying || status.isBuffering || status.playing) return;
-    const timeout = setTimeout(() => {
-      player.replace({ uri: STREAM_URI, headers: STREAM_HEADERS });
-    }, 3000);
-    return () => clearTimeout(timeout);
-  }, [isPlaying, status.playing, status.isBuffering]);
+    if (!sound) return;
+    const unsubscribe = subscribeActiveSoundChange(activeSound => {
+      setIsPlaying(activeSound === sound);
+    });
+    return unsubscribe;
+  }, [sound]);
 
   useEffect(() => {
     let lastSeen: string | null = null;
@@ -78,13 +146,6 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    const unsubscribe = subscribeActiveSoundChange(activePlayer => {
-      setIsPlaying(activePlayer === player);
-    });
-    return unsubscribe;
-  }, [player]);
-
-  useEffect(() => {
     const barValues = barValuesRef.current;
     const animations = barValues.map((bar, i) => {
       const duration = 520 + i * 80;
@@ -110,12 +171,13 @@ export default function App() {
   }, [isPlaying]);
 
   const togglePlayPause = async () => {
+    if (!sound) return;
     try {
       if (isPlaying) {
-        await pauseExclusive(player);
+        await pauseExclusive(sound);
         setIsPlaying(false);
       } else {
-        await playExclusive(player);
+        await playExclusive(sound);
         setIsPlaying(true);
       }
     } catch (error) {
@@ -131,7 +193,7 @@ export default function App() {
         <Image source={require('../assets/images/Title-Trans.png')} style={index.titleImage} contentFit="contain" />
         <View style={index.buttonContainer}>
           <TouchableOpacity style={index.button} onPress={togglePlayPause}>
-            {isPlaying && status.isBuffering
+            {isPlaying && isBuffering
               ? <ActivityIndicator size="large" color="#ffffff" />
               : <MaterialIcons name={isPlaying ? 'pause-circle-filled' : 'play-circle-filled'} size={56} color="#ffffff" />
             }

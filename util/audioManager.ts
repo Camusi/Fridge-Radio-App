@@ -1,61 +1,71 @@
-import { AudioPlayer } from 'expo-audio';
+import { Audio } from 'expo-av';
 
-let activePlayer: AudioPlayer | null = null;
-const listeners = new Set<(active: AudioPlayer | null) => void>();
+let activeSound: Audio.Sound | null = null;
 
-const notifyListeners = (active: AudioPlayer | null) => {
+const listeners = new Set<(active: Audio.Sound | null) => void>();
+
+const notifyListeners = (active: Audio.Sound | null) => {
   listeners.forEach(listener => listener(active));
 };
 
-export async function playExclusive(player: AudioPlayer) {
+export async function playExclusive(sound: Audio.Sound) {
   try {
-    if (activePlayer && activePlayer !== player) {
-      await activePlayer.pause();
+    if (activeSound && activeSound !== sound) {
+      await activeSound.pauseAsync();
     }
   } catch (error) {
-    console.warn('Error pausing active player', error);
+    console.warn('Error pausing active sound:', error);
   }
 
-  activePlayer = player;
-  notifyListeners(activePlayer);
+  activeSound = sound;
+  notifyListeners(activeSound);
 
   try {
-    console.log('Attempting playback');
-    await player.play();
-    console.log('Playback started');
+    await sound.playAsync();
   } catch (error) {
     console.error('PLAYBACK ERROR:', error);
+    activeSound = null;
+    notifyListeners(activeSound);
+    throw error;
   }
 }
 
-export async function pauseExclusive(player: AudioPlayer) {
+export async function pauseExclusive(sound: Audio.Sound) {
   try {
-    player.pause();
+    await sound.pauseAsync();
   } catch (error) {
-    console.warn('Error pausing player', error);
+    console.warn('Error pausing sound:', error);
   }
 
-  if (activePlayer === player) {
-    activePlayer = null;
-    notifyListeners(activePlayer);
-  }
-}
-
-export function clearExclusive(player: AudioPlayer | null) {
-  if (activePlayer === player) {
-    activePlayer = null;
-    notifyListeners(activePlayer);
+  if (activeSound === sound) {
+    activeSound = null;
+    notifyListeners(activeSound);
   }
 }
 
-export function subscribeActiveSoundChange(listener: (active: AudioPlayer | null) => void) {
+export function clearExclusive(sound: Audio.Sound | null) {
+  try {
+    if (activeSound === sound) {
+      activeSound = null;
+      notifyListeners(activeSound);
+    }
+  } catch (error) {
+    console.warn('Error clearing sound:', error);
+  }
+}
+
+export function subscribeActiveSoundChange(
+  listener: (active: Audio.Sound | null) => void
+) {
   listeners.add(listener);
-  listener(activePlayer);
+  listener(activeSound);
   return () => {
     listeners.delete(listener);
   };
 }
 
-export function unsubscribeActiveSoundChange(listener: (active: AudioPlayer | null) => void) {
+export function unsubscribeActiveSoundChange(
+  listener: (active: Audio.Sound | null) => void
+) {
   listeners.delete(listener);
 }
