@@ -20,6 +20,8 @@ export default function BibleApp() {
   const insets = useSafeAreaInsets();
   const isPlayingRef = useRef(false);
   isPlayingRef.current = isPlaying;
+  // Queues a play intent when the user taps before loadAsync has finished
+  const pendingPlayRef = useRef(false);
 
   useEffect(() => {
     let s: Audio.Sound | null = null;
@@ -42,8 +44,10 @@ export default function BibleApp() {
           if (!mounted) return;
 
           if (!status.isLoaded) {
-            setIsBuffering(false);
+            // Only react to errors — don't clear buffering during normal loading
             if (status.error) {
+              setIsBuffering(false);
+              pendingPlayRef.current = false;
               console.error('Stream error:', status.error);
               if (isPlayingRef.current) {
                 setTimeout(async () => {
@@ -62,7 +66,16 @@ export default function BibleApp() {
             return;
           }
 
-          setIsBuffering(status.isBuffering);
+          // Auto-play if the user tapped play while loadAsync was still in progress
+          if (pendingPlayRef.current && !status.isPlaying) {
+            pendingPlayRef.current = false;
+            playExclusive(s!).catch(e => console.warn('Auto-play failed:', e));
+            return;
+          }
+
+          // Only show buffering when not yet producing audio — live streams
+          // keep isBuffering true in the background even during active playback.
+          setIsBuffering(status.isBuffering && !status.isPlaying);
 
           if (status.didJustFinish && isPlayingRef.current) {
             setTimeout(async () => {
@@ -80,14 +93,20 @@ export default function BibleApp() {
           }
         });
 
+        // Expose the Sound object immediately so the first tap isn't a no-op
+        if (mounted) setSound(s);
+
         await s.loadAsync(
           { uri: STREAM_URI },
           { shouldPlay: false, progressUpdateIntervalMillis: 500 }
         );
-
-        if (mounted) setSound(s);
       } catch (error) {
         console.error('Audio setup error:', error);
+        if (mounted) {
+          pendingPlayRef.current = false;
+          setIsBuffering(false);
+          setIsPlaying(false);
+        }
       }
     };
 
@@ -139,6 +158,22 @@ export default function BibleApp() {
   const togglePlayPause = async () => {
     if (!sound) return;
     try {
+      const status = await sound.getStatusAsync();
+
+      if (!status.isLoaded) {
+        // loadAsync not yet complete — queue or cancel the play intent
+        if (!isPlaying) {
+          pendingPlayRef.current = true;
+          setIsPlaying(true);
+          setIsBuffering(true);
+        } else {
+          pendingPlayRef.current = false;
+          setIsPlaying(false);
+          setIsBuffering(false);
+        }
+        return;
+      }
+
       if (isPlaying) {
         await pauseExclusive(sound);
         setIsPlaying(false);
