@@ -1,24 +1,33 @@
 import { MaterialIcons } from '@expo/vector-icons';
-import { useAudioPlayer, setAudioModeAsync } from 'expo-audio';
+import { useAudioPlayer, useAudioPlayerStatus, setAudioModeAsync } from 'expo-audio';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useEffect, useRef, useState } from 'react';
-import { Animated, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Animated, TouchableOpacity, View } from 'react-native';
 import { bibleStyles } from '../styles/bible';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { clearExclusive, pauseExclusive, playExclusive, subscribeActiveSoundChange } from '../util/audioManager';
+
+const STREAM_URI = 'https://s2.stationplaylist.com:7078/thebible.mp3';
+const STREAM_HEADERS = { 'Icy-MetaData': '0' };
 
 export default function App() {
   const [isPlaying, setIsPlaying] = useState(false);
   const barValuesRef = useRef(Array.from({ length: 5 }, () => new Animated.Value(0.4)));
   const insets = useSafeAreaInsets();
 
-  const player = useAudioPlayer({ uri: 'https://s2.stationplaylist.com:7078/thebible.mp3' });
+  const player = useAudioPlayer({ uri: STREAM_URI, headers: STREAM_HEADERS });
+  const status = useAudioPlayerStatus(player);
 
   useEffect(() => {
     const setup = async () => {
       try {
-        await setAudioModeAsync({playsInSilentMode: true});
+        await setAudioModeAsync({
+          playsInSilentMode: true,
+          shouldPlayInBackground: true,
+          interruptionMode: 'duckOthers',
+          shouldRouteThroughEarpiece: false,
+        });
       } catch (error) {
         console.error('Error setting audio mode:', error);
       }
@@ -29,6 +38,15 @@ export default function App() {
       clearExclusive(player);
     };
   }, []);
+
+  // Reconnect if stream drops while supposed to be playing
+  useEffect(() => {
+    if (!isPlaying || status.isBuffering || status.playing) return;
+    const timeout = setTimeout(() => {
+      player.replace({ uri: STREAM_URI, headers: STREAM_HEADERS });
+    }, 3000);
+    return () => clearTimeout(timeout);
+  }, [isPlaying, status.playing, status.isBuffering]);
 
   useEffect(() => {
     const unsubscribe = subscribeActiveSoundChange(activePlayer => {
@@ -75,7 +93,10 @@ export default function App() {
         <Image source={require('../assets/images/The-Bible-Title-Trans.png')} style={bibleStyles.titleImage} contentFit="contain" />
         <View style={bibleStyles.buttonContainer}>
           <TouchableOpacity style={bibleStyles.button} onPress={togglePlayPause}>
-            <MaterialIcons name={isPlaying ? 'pause-circle-filled' : 'play-circle-filled'} size={56} color="#ffffff" />
+            {isPlaying && status.isBuffering
+              ? <ActivityIndicator size="large" color="#ffffff" />
+              : <MaterialIcons name={isPlaying ? 'pause-circle-filled' : 'play-circle-filled'} size={56} color="#ffffff" />
+            }
           </TouchableOpacity>
         </View>
         <View style={bibleStyles.barContainer}>
