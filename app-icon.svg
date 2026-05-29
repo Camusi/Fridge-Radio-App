@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#00a8f3"/>
+      <stop offset="100%" stop-color="#8cfffb"/>
+    </linearGradient>
+    <linearGradient id="barGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#76f1ff"/>
+      <stop offset="100%" stop-color="#00a8f3"/>
+    </linearGradient>
+    <filter id="fridgeShadow" x="-15%" y="-8%" width="140%" height="125%">
+      <feDropShadow dx="0" dy="8" stdDeviation="14" flood-color="#0055aa" flood-opacity="0.22"/>
+    </filter>
+  </defs>
+
+  <!-- Background (full square corners) -->
+  <rect width="512" height="512" fill="url(#bg)"/>
+
+  <!-- Fridge outer body -->
+  <rect x="148" y="72" width="216" height="368" rx="26" fill="white" filter="url(#fridgeShadow)"/>
+
+  <!-- Freezer tint (rounds top-left and top-right corners to match body) -->
+  <path d="M 174 72 L 338 72 Q 364 72 364 98 L 364 194 L 148 194 L 148 98 Q 148 72 174 72 Z" fill="#e0f7ff"/>
+
+  <!-- Freezer / main compartment divider -->
+  <rect x="152" y="192" width="208" height="6" rx="3" fill="#7ef0ff"/>
+
+  <!-- Freezer handle -->
+  <rect x="348" y="110" width="12" height="58" rx="6" fill="#7ef0ff"/>
+
+  <!-- Main door handle -->
+  <rect x="348" y="244" width="12" height="84" rx="6" fill="#7ef0ff"/>
+
+  <!-- Hinge (left side) -->
+  <rect x="148" y="106" width="11" height="18" rx="4" fill="#a8e8f8"/>
+  <rect x="148" y="358" width="11" height="18" rx="4" fill="#a8e8f8"/>
+
+  <!-- Audio visualizer bars in main compartment -->
+  <!-- 5 bars: 24px wide, 10px gap → total 158px, centered → start x=177 -->
+  <!-- all bars bottom-aligned at y=416 -->
+  <rect x="177" y="346" width="24" height="70"  rx="7" fill="url(#barGrad)" opacity="0.60"/>
+  <rect x="211" y="306" width="24" height="110" rx="7" fill="url(#barGrad)" opacity="0.75"/>
+  <rect x="245" y="262" width="24" height="154" rx="7" fill="url(#barGrad)"/>
+  <rect x="279" y="316" width="24" height="100" rx="7" fill="url(#barGrad)" opacity="0.75"/>
+  <rect x="313" y="356" width="24" height="60"  rx="7" fill="url(#barGrad)" opacity="0.55"/>
+</svg>
