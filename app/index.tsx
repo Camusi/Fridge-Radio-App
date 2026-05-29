@@ -1,140 +1,37 @@
 import { MaterialIcons } from '@expo/vector-icons';
-import { Audio, AVPlaybackStatus, InterruptionModeAndroid, InterruptionModeIOS } from 'expo-av';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Animated, Platform, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { index } from '../styles';
-import { clearExclusive, pauseExclusive, playExclusive, subscribeActiveSoundChange } from '../util/audioManager';
+import { TRACK_ID_FRIDGE } from '../util/audioManager';
+import TrackPlayer, { State, useActiveTrack, usePlaybackState } from '../util/trackPlayer';
 
-// Android's MediaPlayer/ExoPlayer fails on TLS over non-standard ports.
-// HTTP works and usesCleartextTraffic is already enabled in app.json.
-// iOS ATS requires HTTPS, and HTTPS works fine there.
 const STREAM_URI = Platform.OS === 'android'
   ? 'http://s2.stationplaylist.com:7078/listen.mp3'
   : 'https://s2.stationplaylist.com:7078/listen.mp3';
 
 export default function App() {
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [isBuffering, setIsBuffering] = useState(false);
+  const { state: pbState } = usePlaybackState();
+  const activeTrack = useActiveTrack() as any;
   const [trackTitle, setTrackTitle] = useState<string>('-');
   const [trackArtist, setTrackArtist] = useState<string>('-');
-  const [sound, setSound] = useState<Audio.Sound | null>(null);
   const barValuesRef = useRef(Array.from({ length: 5 }, () => new Animated.Value(0.4)));
   const insets = useSafeAreaInsets();
+
+  // Derived state from RNTP
+  const isActiveStation = activeTrack?.id === TRACK_ID_FRIDGE;
+  const isPlaying = isActiveStation && pbState === State.Playing;
+  const isBuffering =
+    isActiveStation &&
+    (pbState === State.Buffering || pbState === State.Loading);
+
+  // Keep refs so the fetch interval can read current values without stale closures
+  const isActiveStationRef = useRef(false);
   const isPlayingRef = useRef(false);
+  isActiveStationRef.current = isActiveStation;
   isPlayingRef.current = isPlaying;
-  // Queues a play intent when the user taps before loadAsync has finished
-  const pendingPlayRef = useRef(false);
-
-  useEffect(() => {
-    let s: Audio.Sound | null = null;
-    let mounted = true;
-
-    const setup = async () => {
-      try {
-        await Audio.setAudioModeAsync({
-          playsInSilentModeIOS: true,
-          staysActiveInBackground: true,
-          interruptionModeIOS: InterruptionModeIOS.DuckOthers,
-          interruptionModeAndroid: InterruptionModeAndroid.DuckOthers,
-          shouldDuckAndroid: true,
-          playThroughEarpieceAndroid: false,
-        });
-
-        s = new Audio.Sound();
-
-        s.setOnPlaybackStatusUpdate((status: AVPlaybackStatus) => {
-          if (!mounted) return;
-
-          if (!status.isLoaded) {
-            // Only react to errors — don't clear buffering during normal loading
-            if (status.error) {
-              setIsBuffering(false);
-              pendingPlayRef.current = false;
-              console.error('Stream error:', status.error);
-              if (isPlayingRef.current) {
-                setTimeout(async () => {
-                  if (!mounted || !s) return;
-                  try {
-                    await s.loadAsync(
-                      { uri: STREAM_URI },
-                      { shouldPlay: true }
-                    );
-                  } catch (e) {
-                    console.warn('Reconnect failed:', e);
-                  }
-                }, 3000);
-              }
-            }
-            return;
-          }
-
-          // Auto-play if the user tapped play while loadAsync was still in progress
-          if (pendingPlayRef.current && !status.isPlaying) {
-            pendingPlayRef.current = false;
-            playExclusive(s!).catch(e => console.warn('Auto-play failed:', e));
-            return;
-          }
-
-          // Only show buffering when not yet producing audio — live streams
-          // keep isBuffering true in the background even during active playback.
-          setIsBuffering(status.isBuffering && !status.isPlaying);
-
-          // Live streams shouldn't finish — reconnect if they do
-          if (status.didJustFinish && isPlayingRef.current) {
-            setTimeout(async () => {
-              if (!mounted || !s) return;
-              try {
-                await s.unloadAsync();
-                await s.loadAsync(
-                  { uri: STREAM_URI },
-                  { shouldPlay: true }
-                );
-              } catch (e) {
-                console.warn('Reconnect after finish failed:', e);
-              }
-            }, 1000);
-          }
-        });
-
-        // Expose the Sound object immediately so the first tap isn't a no-op
-        if (mounted) setSound(s);
-
-        await s.loadAsync(
-          { uri: STREAM_URI },
-          { shouldPlay: false, progressUpdateIntervalMillis: 500 }
-        );
-      } catch (error) {
-        console.error('Audio setup error:', error);
-        if (mounted) {
-          pendingPlayRef.current = false;
-          setIsBuffering(false);
-          setIsPlaying(false);
-        }
-      }
-    };
-
-    setup();
-
-    return () => {
-      mounted = false;
-      if (s) {
-        clearExclusive(s);
-        s.setOnPlaybackStatusUpdate(null);
-        s.unloadAsync().catch(console.warn);
-      }
-    };
-  }, []);
-
-  useEffect(() => {
-    if (!sound) return;
-    const unsubscribe = subscribeActiveSoundChange(activeSound => {
-      setIsPlaying(activeSound === sound);
-    });
-    return unsubscribe;
-  }, [sound]);
 
   useEffect(() => {
     let lastSeen: string | null = null;
@@ -153,6 +50,11 @@ export default function App() {
 
         setTrackTitle(title);
         setTrackArtist(artist);
+
+        // Update lock screen / notification metadata while this station is live
+        if (TrackPlayer && isActiveStationRef.current && isPlayingRef.current) {
+          TrackPlayer.updateNowPlayingMetadata({ title, artist }).catch(() => {});
+        }
       } catch (error) {
         console.warn('Unable to load now playing:', error);
       }
@@ -189,34 +91,24 @@ export default function App() {
   }, [isPlaying]);
 
   const togglePlayPause = async () => {
-    if (!sound) return;
+    if (!TrackPlayer) return;
     try {
-      const status = await sound.getStatusAsync();
-
-      if (!status.isLoaded) {
-        // loadAsync not yet complete — queue or cancel the play intent
-        if (!isPlaying) {
-          pendingPlayRef.current = true;
-          setIsPlaying(true);
-          setIsBuffering(true);
-        } else {
-          pendingPlayRef.current = false;
-          setIsPlaying(false);
-          setIsBuffering(false);
-        }
-        return;
-      }
-
-      if (isPlaying) {
-        await pauseExclusive(sound);
-        setIsPlaying(false);
+      if (isPlaying || isBuffering) {
+        await TrackPlayer.reset();
       } else {
-        await playExclusive(sound);
-        setIsPlaying(true);
+        await TrackPlayer.reset();
+        await TrackPlayer.add({
+          id: TRACK_ID_FRIDGE,
+          url: STREAM_URI,
+          title: trackTitle !== '-' ? trackTitle : 'Cool Fresh Good',
+          artist: trackArtist !== '-' ? trackArtist : 'thebible.net.nz',
+          artwork: require('../assets/images/Cool-Fresh-Good-Trans.png'),
+          isLiveStream: true,
+        } as any);
+        await TrackPlayer.play();
       }
     } catch (error) {
       console.error('Toggle playback failed:', error);
-      setIsPlaying(false);
     }
   };
 
@@ -227,7 +119,7 @@ export default function App() {
         <Image source={require('../assets/images/Title-Trans.png')} style={index.titleImage} contentFit="contain" />
         <View style={index.buttonContainer}>
           <TouchableOpacity style={index.button} onPress={togglePlayPause}>
-            {isPlaying && isBuffering
+            {isBuffering
               ? <ActivityIndicator size="large" color="#ffffff" />
               : <MaterialIcons name={isPlaying ? 'pause-circle-filled' : 'play-circle-filled'} size={56} color="#ffffff" />
             }

@@ -1,6 +1,6 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import { Tabs, useRouter, useSegments } from 'expo-router';
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { PanResponder, View } from 'react-native';
 import { Provider } from '../context/context';
 import { layoutStyles } from '../styles/layout';
@@ -11,6 +11,33 @@ export default function RootLayout() {
   const currentRoute = segments[segments.length - 1] ?? 'index';
   const routes = ['updates', 'index', 'bible', 'info'] as const;
   const routePaths = ['/updates', '/', '/bible', '/info'] as const;
+
+  useEffect(() => {
+    // All RNTP imports are lazy so the app doesn't crash in Expo Go
+    // where the native module is absent.
+    try {
+      const RNTP = require('react-native-track-player');
+      const TrackPlayer = RNTP.default;
+      const { Capability, AppKilledPlaybackBehavior } = RNTP;
+      const { PlaybackService } = require('../service');
+
+      TrackPlayer.registerPlaybackService(() => PlaybackService);
+      TrackPlayer.setupPlayer({ autoHandleInterruptions: true })
+        .then(() =>
+          TrackPlayer.updateOptions({
+            capabilities: [Capability.Play, Capability.Pause, Capability.Stop],
+            compactCapabilities: [Capability.Play, Capability.Pause],
+            android: {
+              appKilledPlaybackBehavior:
+                AppKilledPlaybackBehavior.StopPlaybackAndRemoveNotification,
+            },
+          }),
+        )
+        .catch(console.warn);
+    } catch {
+      // Expo Go / web — native module unavailable, audio features are disabled.
+    }
+  }, []);
 
   const panResponder = useMemo(
     () =>
